@@ -1,0 +1,5 @@
+# no pyc files
+.pyc
+# no data file
+/data
+

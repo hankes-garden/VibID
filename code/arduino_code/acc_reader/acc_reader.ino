@@ -31,12 +31,12 @@ void loop() {
   nAccZ = Wire.read() << 8 | Wire.read(); // 0x3F (ACCEL_ZOUT_H) & 0x40 (ACCEL_ZOUT_L)
   Serial.print(nAccX); Serial.print(", ");
   Serial.print(nAccY); Serial.print(", ");
-  Serial.println(nAccZ);
+  Serial.print(nAccZ); Serial.print(", ");
 
-//  nGyroX = Wire.read() << 8 | Wire.read(); // 0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
-//  nGyroY = Wire.read() << 8 | Wire.read(); // 0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
-//  nGyroZ = Wire.read() << 8 | Wire.read(); // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
-//  Serial.print(nGyroX);Serial.print(", ");
-//  Serial.print(nGyroY);Serial.print(", ");
-//  Serial.println(nGyroZ);
+  nGyroX = Wire.read() << 8 | Wire.read(); // 0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
+  nGyroY = Wire.read() << 8 | Wire.read(); // 0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
+  nGyroZ = Wire.read() << 8 | Wire.read(); // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
+  Serial.print(nGyroX);Serial.print(", ");
+  Serial.print(nGyroY);Serial.print(", ");
+  Serial.println(nGyroZ);
 }

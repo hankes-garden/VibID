@@ -709,7 +709,7 @@ void setup()
 
   // Clear the 'sleep' bit to start the sensor.
   MPU6050_write_reg (MPU6050_I2C_ADDRESS_0, MPU6050_PWR_MGMT_1, 0);
-  MPU6050_write_reg (MPU6050_I2C_ADDRESS_1, MPU6050_PWR_MGMT_1, 0);
+  // MPU6050_write_reg (MPU6050_I2C_ADDRESS_1, MPU6050_PWR_MGMT_1, 0);
 }
 
 
@@ -728,8 +728,8 @@ void loop()
   // are not very stable.
   error = MPU6050_read (MPU6050_I2C_ADDRESS_0, MPU6050_ACCEL_XOUT_H, 
 						(uint8_t *) &g_data0, sizeof(g_data0));
-  error = MPU6050_read (MPU6050_I2C_ADDRESS_1, MPU6050_ACCEL_XOUT_H, 
-						(uint8_t *) &g_data1, sizeof(g_data1));
+  // error = MPU6050_read (MPU6050_I2C_ADDRESS_1, MPU6050_ACCEL_XOUT_H, 
+						// (uint8_t *) &g_data1, sizeof(g_data1));
   // Serial.print(F("Read accel, temp and gyro, error = "));
   // Serial.println(error,DEC);
 
@@ -749,13 +749,13 @@ void loop()
   SWAP (g_data0.reg.y_gyro_h, g_data0.reg.y_gyro_l);
   SWAP (g_data0.reg.z_gyro_h, g_data0.reg.z_gyro_l);
   
-  SWAP (g_data1.reg.x_accel_h, g_data1.reg.x_accel_l);
-  SWAP (g_data1.reg.y_accel_h, g_data1.reg.y_accel_l);
-  SWAP (g_data1.reg.z_accel_h, g_data1.reg.z_accel_l);
-  SWAP (g_data1.reg.t_h, g_data1.reg.t_l);
-  SWAP (g_data1.reg.x_gyro_h, g_data1.reg.x_gyro_l);
-  SWAP (g_data1.reg.y_gyro_h, g_data1.reg.y_gyro_l);
-  SWAP (g_data1.reg.z_gyro_h, g_data1.reg.z_gyro_l);
+  // SWAP (g_data1.reg.x_accel_h, g_data1.reg.x_accel_l);
+  // SWAP (g_data1.reg.y_accel_h, g_data1.reg.y_accel_l);
+  // SWAP (g_data1.reg.z_accel_h, g_data1.reg.z_accel_l);
+  // SWAP (g_data1.reg.t_h, g_data1.reg.t_l);
+  // SWAP (g_data1.reg.x_gyro_h, g_data1.reg.x_gyro_l);
+  // SWAP (g_data1.reg.y_gyro_h, g_data1.reg.y_gyro_l);
+  // SWAP (g_data1.reg.z_gyro_h, g_data1.reg.z_gyro_l);
   
 
 
@@ -766,15 +766,15 @@ void loop()
   Serial.print(F(", "));
   Serial.print(g_data0.value.y_accel, DEC);
   Serial.print(F(", "));
-  Serial.print(g_data0.value.z_accel, DEC);
-  Serial.print(F(", "));
+  Serial.println(g_data0.value.z_accel, DEC);
+  // Serial.print(F(", "));
   
-  Serial.print(g_data1.value.x_accel, DEC);
-  Serial.print(F(", "));
-  Serial.print(g_data1.value.y_accel, DEC);
-  Serial.print(F(", "));
-  Serial.print(g_data1.value.z_accel, DEC);
-  Serial.println(F(""));
+  // Serial.print(g_data1.value.x_accel, DEC);
+  // Serial.print(F(", "));
+  // Serial.print(g_data1.value.y_accel, DEC);
+  // Serial.print(F(", "));
+  // Serial.print(g_data1.value.z_accel, DEC);
+  // Serial.println(F(""));
 
 
   // // The temperature sensor is -40 to +85 degrees Celsius.
