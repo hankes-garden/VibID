@@ -19,8 +19,8 @@ def getColorList(nColors, strColorMap = 'gist_rainbow'):
     lsColors=[scalarMap.to_rgba(i) for i in xrange(nColors)]
     return lsColors
 
-def plotEx(lsData, nStartAxis, nEndAxis, strFontName, \
-           nFontSize, nMaxRows = 3, lsColors=['r', 'g', 'b', 'c', 'y', 'm']):
+def plotByDataAxis(lsData, lsDataNames, nStartAxis, nEndAxis, strFontName='Times new Roman', \
+           nFontSize=14, nMaxRows = 3, lsColors=['r', 'g', 'b', 'c', 'y', 'm']):
     nData2Plot = len(lsData)
     nSubplotRows = nMaxRows if nData2Plot>=nMaxRows else nData2Plot
     nSubplotCols = int(math.ceil(nData2Plot*1.0/nMaxRows))
@@ -35,14 +35,14 @@ def plotEx(lsData, nStartAxis, nEndAxis, strFontName, \
             nCol2Plot = nDataIndex / nMaxRows
             axes[nRow2plot, nCol2Plot].plot(srAxis, \
                                     color=lsColors[i])
-            axes[nRow2plot, nCol2Plot].set_xlabel(lsFileNames[nDataIndex], \
+            axes[nRow2plot, nCol2Plot].set_xlabel(lsDataNames[nDataIndex], \
                                         fontname=strFontName, fontsize=nFontSize+2)
             plt.setp(axes[nRow2plot, nCol2Plot].get_xticklabels(), \
-                     fontname=strFontName, fontsize=nFontSize, rotation=90)
+                     fontname=strFontName, fontsize=nFontSize, rotation=45)
             plt.setp(axes[nRow2plot, nCol2Plot].get_yticklabels(), \
                      fontname=strFontName, fontsize=nFontSize, rotation=0)
             i=i+1
-    plt.tight_layout()
+            plt.tight_layout()
     plt.show()
     
 def loadData(strWorkingDir, lsFileNames, lsColumnNames, strFileExt = '.txt'):
@@ -62,35 +62,28 @@ def loadData(strWorkingDir, lsFileNames, lsColumnNames, strFileExt = '.txt'):
         
     return lsData
     
-
+#%%
 if __name__ == '__main__':
     #%% setup
-    dSamplingFreq = 190.0
+    dSamplingFreq = 380.0
     
-    strWorkingDir = "D:\\yanglin\\baidu_cloud\\research\\my_research\\resonance_lab\\data\\"
+    strWorkingDir = "D:\\yanglin\\baidu_cloud\\research\\my_research\\resonance_lab\\data\\feasibility_v2\\"
     
     lsColumnNames = ['x0', 'y0','z0','x1', 'y1','z1']
     
-        
-    #%% ex1. motor
-    lsFileNames = ['yl_3_50','yl_3_60','yl_3_65','yl_4_50','yl_4_75','yl_4_80']
-    lsData = loadData(strWorkingDir, lsFileNames, lsColumnNames)
-    plotEx(lsData[:3], nStartAxis=3, nEndAxis=6, strFontName='Times new Roman', nFontSize=14)
+    lsBasicColors = ['r', 'g', 'b', 'c', 'y', 'm']
     
-    #%% ex2. single user
-    lsFileNames = ['yl_3_50','yl_3_60','yl_3_65']
-    lsData = loadData(strWorkingDir, lsFileNames, lsColumnNames)
-    plotEx(lsData, nStartAxis=0, nEndAxis=3, strFontName='Times new Roman', nFontSize=14)
+    lsQY_t1 = ['qy_t1_60', 'qy_t1_45', 'qy_t1_45_1', 'qy_t1_45_2', 'qy_t1_60_1']
     
-    #%% ex3. different users
-    lsFileNames = ['fan_3_45','ww_3_45','yl_3_50']
-    lsData = loadData(strWorkingDir, lsFileNames, lsColumnNames)
-    plotEx(lsData, nStartAxis=0, nEndAxis=3, strFontName='Times new Roman', nFontSize=14)
+    lsYL_t1 = ['yl_t1_50','yl_t1_55','yl_t1_45','yl_t1_50_1','yl_t1_45_1']
+    lsYL_t2 = ['yl_t2_50','yl_t2_70','yl_t2_65','yl_t2_60','yl_t2_55']
+    lsYL_t3 = ['yl_t3_45','yl_t3_60','yl_t3_50','yl_t3_50_1','yl_t3_55']
     
-    #%% ex4. different measurement points
-    lsFileNames = ['location_v2\\yl_4_45','location_v2\\yl_4_60','location_v2\\yl_4_85',
-    'experiment_on_locations\\yl_4_65_v2','experiment_on_locations\\yl_4_50_v2','experiment_on_locations\\yl_4_55_v2']
+    #%% compare axis
+    lsFileNames = lsYL_t1+lsYL_t2+lsYL_t3
     lsData = loadData(strWorkingDir, lsFileNames, lsColumnNames)
-    lsColors = ['r']*6 + ['g']*6 + ['b']*6
-    plotEx(lsData, nStartAxis=0, nEndAxis=3, strFontName='Times new Roman', nFontSize=14, nMaxRows=3, lsColors=lsColors)
+    nAxesPerFig = len(lsFileNames)
+    lsColors = [c for c in lsBasicColors for _ in xrange(nAxesPerFig)]
+    plotByDataAxis(lsData, lsFileNames, nStartAxis=0, nEndAxis=3, \
+        nMaxRows=5, lsColors=lsColors)
 
