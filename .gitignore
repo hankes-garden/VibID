@@ -1,5 +1,5 @@
 # no pyc files
-.pyc
+*.pyc
 # no data file
 /data
-
+/related_work/to_read

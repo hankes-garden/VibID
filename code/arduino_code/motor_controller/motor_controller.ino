@@ -4,7 +4,7 @@ const int ANALOG_OUT_PIN = 3;
 const int INTENSITY_STEP = 5;
 const int VIBRATION_DURATION = 1000;
 const int INTERVAL_DURATION = 100;
-const int RESET_DURATION = 5000;
+const int RESET_DURATION = 3000;
 const int SERIAL_BAUD_RATE = 9600;
 const int MAX_INTENSITY = 200;
 
@@ -37,11 +37,11 @@ void loop() {
       // stop vibration first
       g_bSweep = false;
       setVibration(0);
-      delay(INTERVAL_DURATION);
+      delay(RESET_DURATION);
 
-      // vibrate
+      // vibrate for 5 basic vibration time unit
       setVibration(nInput);
-      delay(VIBRATION_DURATION);
+      delay(VIBRATION_DURATION*5);
       setVibration(0);
     }
     else // < 0, sweep from 0 to specific input

@@ -56,7 +56,7 @@
 // #define MPU6050_SMPLRT_DIV         0x19   // R/W
 // #define MPU6050_CONFIG             0x1A   // R/W
 // #define MPU6050_GYRO_CONFIG        0x1B   // R/W
-// #define MPU6050_ACCEL_CONFIG       0x1C   // R/W
+#define MPU6050_ACCEL_CONFIG       0x1C   // R/W
 // #define MPU6050_FF_THR             0x1D   // R/W
 // #define MPU6050_FF_DUR             0x1E   // R/W
 // #define MPU6050_MOT_THR            0x1F   // R/W
@@ -236,19 +236,19 @@
 // #define MPU6050_FS_SEL_1000 MPU6050_FS_SEL_2
 // #define MPU6050_FS_SEL_2000 MPU6050_FS_SEL_3
 
-// // ACCEL_CONFIG Register
-// // The XA_ST, YA_ST, ZA_ST are bits for selftest.
-// // The AFS_SEL sets the range for the accelerometer.
-// // These are the names for the bits.
-// // Use these only with the bit() macro.
-// #define MPU6050_ACCEL_HPF0 MPU6050_D0
-// #define MPU6050_ACCEL_HPF1 MPU6050_D1
-// #define MPU6050_ACCEL_HPF2 MPU6050_D2
-// #define MPU6050_AFS_SEL0   MPU6050_D3
-// #define MPU6050_AFS_SEL1   MPU6050_D4
-// #define MPU6050_ZA_ST      MPU6050_D5
-// #define MPU6050_YA_ST      MPU6050_D6
-// #define MPU6050_XA_ST      MPU6050_D7
+// ACCEL_CONFIG Register
+// The XA_ST, YA_ST, ZA_ST are bits for selftest.
+// The AFS_SEL sets the range for the accelerometer.
+// These are the names for the bits.
+// Use these only with the bit() macro.
+#define MPU6050_ACCEL_HPF0 MPU6050_D0
+#define MPU6050_ACCEL_HPF1 MPU6050_D1
+#define MPU6050_ACCEL_HPF2 MPU6050_D2
+#define MPU6050_AFS_SEL0   MPU6050_D3
+#define MPU6050_AFS_SEL1   MPU6050_D4
+#define MPU6050_ZA_ST      MPU6050_D5
+#define MPU6050_YA_ST      MPU6050_D6
+#define MPU6050_XA_ST      MPU6050_D7
 
 // // Combined definitions for the ACCEL_HPF values
 // #define MPU6050_ACCEL_HPF_0 (0)
@@ -267,11 +267,11 @@
 // #define MPU6050_ACCEL_HPF_0_63HZ MPU6050_ACCEL_HPF_4
 // #define MPU6050_ACCEL_HPF_HOLD   MPU6050_ACCEL_HPF_7
 
-// // Combined definitions for the AFS_SEL values
-// #define MPU6050_AFS_SEL_0 (0)
-// #define MPU6050_AFS_SEL_1 (bit(MPU6050_AFS_SEL0))
-// #define MPU6050_AFS_SEL_2 (bit(MPU6050_AFS_SEL1))
-// #define MPU6050_AFS_SEL_3 (bit(MPU6050_AFS_SEL1)|bit(MPU6050_AFS_SEL0))
+// Combined definitions for the AFS_SEL values
+#define MPU6050_AFS_SEL_0 (0)
+#define MPU6050_AFS_SEL_1 (bit(MPU6050_AFS_SEL0))
+#define MPU6050_AFS_SEL_2 (bit(MPU6050_AFS_SEL1))
+#define MPU6050_AFS_SEL_3 (bit(MPU6050_AFS_SEL1)|bit(MPU6050_AFS_SEL0))
 
 // // Alternative names for the combined definitions
 // // The name uses the full scale range for the accelerometer.
