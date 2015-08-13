@@ -34,6 +34,9 @@ def plotByDataAxis(lsData, lsDataNames, lsAxis2Plot,
     nSubplotRows = nMaxRows if nData2Plot>=nMaxRows else nData2Plot
     nSubplotCols = int(math.ceil(nData2Plot*1.0/nMaxRows))
     
+    lsColors = lsColors * int(math.ceil(len(lsData)*1.0/len(lsColors)) ) \
+                    if len(lsColors) < len(lsData) else lsColors
+    
     i = 0
     for strCol in lsAxis2Plot:
         fig, axes = plt.subplots(nrows=nSubplotRows, ncols=nSubplotCols, squeeze=False)
@@ -58,11 +61,12 @@ def plotByDataAxis(lsData, lsDataNames, lsAxis2Plot,
 def plotModolus(lsData, lsDataNames, lsXYZ,
                 arrXTicks=None, strFontName='Times new Roman',
                 nFontSize=14, nMaxRows = 3,
-                lsColors=['r', 'g', 'b', 'c', 'y', 'm']):
+                lsColors=None):
     """plot modulus for a list of data"""
     nData2Plot = len(lsData)
     nSubplotRows = nMaxRows if nData2Plot>=nMaxRows else nData2Plot
     nSubplotCols = int(math.ceil(nData2Plot*1.0/nMaxRows))
+    lsColors = ['b', ] * len(lsData) if lsColors is None else lsColors
     
     fig, axes = plt.subplots(nrows=nSubplotRows, ncols=nSubplotCols, squeeze=False)
     for i, (dfData, strDataName) in enumerate(zip(lsData, lsDataNames) ):
@@ -76,16 +80,16 @@ def plotModolus(lsData, lsDataNames, lsXYZ,
                              
         nRow2plot = i % nMaxRows
         nCol2Plot = i / nMaxRows
-        axes[nRow2plot, nCol2Plot].plot(arrModulus)
+        axes[nRow2plot, nCol2Plot].plot(arrModulus, color=lsColors[i])
         axes[nRow2plot, nCol2Plot].set_xlabel(strDataName)
         axes[nRow2plot, nCol2Plot].grid()
     plt.tight_layout()
     plt.show()
         
     
-def fftEx(lsTimeData, dSamplingFreq, nDCEnd=5):
+def fftByAxis(lsTimeData, dSamplingFreq, nDCEnd=5):
     """
-        This function performs fft on a list of data
+        This function performs fft on each axis on a list of data.
         
         Parameters
         ----------
@@ -95,10 +99,10 @@ def fftEx(lsTimeData, dSamplingFreq, nDCEnd=5):
         
         Returns
         ----------
-        lsFrequencyData: a list of data in frequency domain
+        lsFFTResult: a list of data in frequency domain
         
     """
-    lsFrequencyData = []
+    lsFFTResult = []
     for dfTimeData in lsTimeData:
         nSamples = len(dfTimeData)
         dResolution = dSamplingFreq*1.0/nSamples
@@ -111,8 +115,34 @@ def fftEx(lsTimeData, dSamplingFreq, nDCEnd=5):
             arrAxis_freq = np.abs(arrFreq)/(nSamples*1.0)
             
             dfFreqData[col+"_freq"] = arrAxis_freq
-        lsFrequencyData.append(dfFreqData)
-    return lsFrequencyData
+        lsFFTResult.append(dfFreqData)
+    return lsFFTResult
+    
+def fftOnModulus(lsData, lsXYZColumns, dSamplingFreq, nDCEnd=5):
+    """compute fft on modulus of data"""
+    lsFFTResult = []
+    for dfData in lsData:
+        dfXYZ = dfData[lsXYZColumns]
+        nSamples = len(dfXYZ)
+        dResolution = dSamplingFreq*1.0/nSamples
+        arrFreqIndex = np.linspace(nDCEnd*dResolution, dSamplingFreq/2.0, nSamples/2-nDCEnd)
+        
+        #remove gravity
+        dfXYZ_noG = single_data.removeGravity(dfXYZ, 
+                                              nStart=0, 
+                                              nEnd=dSamplingFreq*2)
+        # compute modulus
+        arrModulus = np.sqrt(np.power(dfXYZ_noG.iloc[:,0], 2.0) + 
+                             np.power(dfXYZ_noG.iloc[:, 1], 2.0) + 
+                             np.power(dfXYZ_noG.iloc[:, 2], 2.0) )
+                             
+        # fft
+        arrFreq = fftpack.fft(arrModulus)[nDCEnd:nSamples/2]
+        arrFreq_normalized = arrFreq/(nSamples*1.0)
+        dfFreq = pd.DataFrame(arrFreq_normalized, index=arrFreqIndex, columns=['modulus'])
+        lsFFTResult.append(dfFreq)
+        
+    return lsFFTResult
             
     
     
@@ -134,7 +164,7 @@ def loadDataEx(strWorkingDir, lsFileNames, lsColumnNames, strFileExt = '.txt'):
         
     return lsData
     
-def FRFEx(lsData, lsDataName, dSamplingFreq,
+def frfEx(lsData, lsDataName, dSamplingFreq,
           nMaxRows=3, 
           lsRespCols = ['x0', 'y0', 'z0'], 
           lsExcCols = ['x1', 'y1', 'z1'], 
@@ -248,7 +278,8 @@ def FRFEx(lsData, lsDataName, dSamplingFreq,
     
 #%%
 if __name__ == '__main__':
-    return
+    import sys
+    sys.exit(0)
     
     #%% data sets & setup
     lsColumnNames = ['x0', 'y0','z0',
@@ -263,21 +294,37 @@ if __name__ == '__main__':
     
     nBasicFontSize = 16
     
-    
+    # QY
     lsQY_t1= ['qy_1_1_60', 'qy_1_1_45', 'qy_1_1_45_1', 'qy_1_1_45_2', 'qy_1_1_60_1']
     
+    # CYJ
     lsCYJ_t1 = ['cyj_55', 'cyj_60', 'cyj_75', 
                 'cyj_80','cyj_90']
+                
     lsCYJ_t2 = ['cyj2_55', 'cyj2_70', 'cyj2_85']
+    
     lsCYJ_t5 = ['cyj_t5_l1_45_1', 'cyj_t5_l1_45', 'cyj_t5_l1_35', 
                 'cyj_t5_l2_50', 'cyj_t5_l2_35', 'cyj_t5_l2_45']
+                
+    lsCYJ_t6 = ['cyj_t6_l1_35', 'cyj_t6_l1_35_1', 'cyj_t6_l1_45']
     
+    lsCYJ_t7 = ['cyj_t7_l1_35', 'cyj_t7_l1_40', 'cyj_t7_l1_40_1']
+    
+    lsCYJ_t8 = ['cyj_t8_l1_30', 'cyj_t8_l1_40', 'cyj_t8_l1_45']
+    
+    lsCYJ_t9 = ['cyj_t9_l1_40', 'cyj_t9_l1_40_1', 'cyj_t9_l1_40_2']
+    
+    lsCYJ_t10 = ['cyj_t10_l1_40', 'cyj_t10_l1_40_1', 'cyj_t10_l1_40_2']
+    
+    # ZF
     lsFAN_t1 = ['fan_55', 'fan_60', 'fan_60_1', 
                 'fan_60_2', 'fan_65']
     
+    # WW
     lsWW = ['ww_3_40', 'ww_3_40_1', 'ww_3_45',
             'ww_4_40', 'ww_4_45', 'ww_4_45_1']
     
+    # YL
     lsYL_t1 = ['yl_4_50', 'yl_4_75','yl_4_80']
     lsYL_t2 = ['yl_4_50_v2', 'yl_4_55_v2', 'yl_4_65_v2']
     lsYL_t3= ['yl_t1_l2_0',]
@@ -298,6 +345,28 @@ if __name__ == '__main__':
     
     lsYL_t10 = ["yl_t10_l2_40", "yl_t10_l2_45", "yl_t10_l2_50"]
     
+    lsYL_t11 = ["yl_t11_l1_40", "yl_t11_l1_45", "yl_t11_l1_45_1", 
+                "yl_t11_l10_40", "yl_t11_l10_55", "yl_t11_l10_75", 
+                "yl_t11_l4_55", "yl_t11_l4_60", "yl_t11_l4_65"]
+                
+    lsYL_t12 = ["yl_t12_l1_40", "yl_t12_l1_40_1", "yl_t12_l1_40_2"]
+    
+    lsYL_t13 = ["yl_t13_l1_45", "yl_t13_l1_65", "yl_t13_l1_70"]
+    
+    lsYL_t14 = ["yl_t14_l1_35", "yl_t14_l1_35_1", "yl_t14_l1_40"]
+    
+    lsYL_t15 = ["yl_t15_l1_35", "yl_t15_l1_40", "yl_t15_l1_50"]
+    
+    lsYL_t16 = ["yl_t16_l1_35", "yl_t16_l1_40", "yl_t16_l1_40_1"]
+    
+    lsYL_t17 = ["yl_t17_l1_35", "yl_t17_l1_35_1", "yl_t17_l1_35_2"]
+    
+    lsYL_t18 = ["yl_t18_l1_45", "yl_t18_l1_35", "yl_t18_l1_35_1"]
+                
+    lsWW_t2 = ["ww_t2_l1_70", "ww_t2_l1_45", "ww_t2_l1_60",
+                "ww_t2_l10_65", "ww_t2_l10_70", "ww_t2_l10_85",
+                "ww_t2_l4_60", "ww_t2_l4_65", "ww_t2_l4_70"]
+    
     lsMotor_t1 = ['motor_gx_0', 'motor_gx_1', 'motor_gx_2', 
                   'motor_gx_3', 'motor_gx_4', 'motor_gx_5']
   
@@ -307,16 +376,19 @@ if __name__ == '__main__':
     lsMotor_t3 = ['motor_gz_0', 'motor_gz_1', 'motor_gz_2', 
                   'motor_gz_3', 'motor_gz_4', 'motor_gz_5']
                   
+    lsTest = ["test", "test1", "test2", "test3", "test4"]
+                  
                      
-    #%% load data
+    #%% data to load
     dSamplingFreq = 160.0
     strWorkingDir = ("D:\\yanglin\\baidu_cloud\\research\\my_research\\resonance_lab\\"
-                     "data\\feasibility_v5\\")
+                     "data\\feasibility_v6\\")
     
-    lsFileNames = lsCYJ_t5
-    lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
+    lsFileNames = lsCYJ_t6 + lsCYJ_t7 + lsCYJ_t8+ lsCYJ_t9 + lsCYJ_t10
+    
     
     #%% statistics of time domain
+    lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
     for i, strColName in enumerate(lsColumnNames[:3]):
         dcStats = {}
         for strFileName, dfAcc in zip(lsFileNames, lsData):
@@ -331,9 +403,10 @@ if __name__ == '__main__':
         plt.show()
     
     #%% time domain
+    lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
     nAxesPerFig = len(lsFileNames)
     lsColors = [c for c in lsBasicColors for _ in xrange(nAxesPerFig)]
-    lsColumn2Plot = ['x1', 'y1', 'z1']
+    lsColumn2Plot = ['x0', 'y0', 'z0', 'x1', 'y1', 'z1']
     plotByDataAxis(lsData, lsFileNames, lsColumn2Plot,
                    nStartPoint=0, nEndPoint=-1, 
                    nMaxRows=3, lsColors=lsColors)
@@ -341,26 +414,31 @@ if __name__ == '__main__':
     #%% modulus
     lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
     
-    lsColors = lsRGB * 2
+    lsColors = ['b']*len(lsData)
     lsColumn2Plot = ['x0', 'y0', 'z0']
     plotModolus(lsData, lsFileNames, lsColumn2Plot,
                 nMaxRows=3, lsColors=lsColors)
                 
-#    lsColumn2Plot = ['x1', 'y1', 'z1']
-#    plotModolus(lsData, lsFileNames, lsColumn2Plot,
-#                nMaxRows=3, lsColors=lsColors)
-        
-    #%% frequency domain
-    nDCEnd=2
+    lsColumn2Plot = ['x1', 'y1', 'z1']
+    plotModolus(lsData, lsFileNames, lsColumn2Plot,
+                nMaxRows=3, lsColors=lsColors)
+    #%% fft for modulus
     lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
-    lsFreqData = fftEx(lsData, dSamplingFreq=380, nDCEnd=nDCEnd)
     
-    nAxesPerFig = len(lsFileNames)
-    lsColors = [c for c in lsBasicColors for _ in xrange(nAxesPerFig)]
-    plotByDataAxis(lsFreqData, lsFileNames, nStartAxis=0, nEndAxis=3, \
-        nMaxRows=3, lsColors=lsColors)
+    lsColors = ['b']*len(lsData)
+    lsXYZColumns = ['x0', 'y0', 'z0']
+    lsFreqData = fftOnModulus(lsData, lsXYZColumns, dSamplingFreq, nDCEnd=50)
     
+    lsMagnitudeData = []
+    for dfFreqData in lsFreqData:
+        dfMagnitude = dfFreqData.abs()
+        lsMagnitudeData.append(dfMagnitude)
+
+    plotByDataAxis(lsMagnitudeData, lsFileNames, 
+                   lsAxis2Plot=['modulus', ], lsColors=lsColors)
+        
     #%% visualize time + freq = specgram
+    lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
     fig = plt.figure()
     ax = fig.add_subplot(111)
     Pxx, freqs, bins, im = ax.specgram(dfAcc['y1'].values, 
@@ -374,4 +452,5 @@ if __name__ == '__main__':
     
     #%% FRF
     lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
-    FRFEx(lsData, lsFileNames, dSamplingFreq)
+    frfEx(lsData, lsFileNames, dSamplingFreq)
+

@@ -80,7 +80,7 @@ def computeGravity(dfXYZ, nStart=0, nEnd=5000):
     dAvgGZ = np.average(dfXYZ.iloc[nStart:nEnd, 2])
     return dAvgGX, dAvgGY, dAvgGZ, math.sqrt(dAvgGX**2+dAvgGY**2+dAvgGZ**2)
     
-def removeGravity(dfXYZ, nStart, nEnd):
+def removeGravity(dfXYZ, nStart=0, nEnd=1000):
     """
         This function compute the gravity via stable states, 
         the remove it from data
@@ -111,9 +111,9 @@ if __name__ == '__main__':
     dSamplingFreq = 160.0
     
     strWorkingDir = ("D:\\yanglin\\baidu_cloud\\research\\my_research\\"
-                     "resonance_lab\\data\\feasibility_v5\\")
+                     "resonance_lab\\data\\feasibility_v6\\")
     
-    strFileName = "yl_t1_l2_0"
+    strFileName = "yl_t1_l1_40"
     
     lsColumnNames = ['x0', 'y0','z0', 'gx0', 'gy0','gz0',
                      'x1', 'y1','z1', 'gx1', 'gy1','gz1']
