@@ -197,8 +197,6 @@ def classify(arrX, arrY, strModelName, dcModelParams, lsFeatureNames, nFold=10):
                                  model.feature_importances_.tolist()) }
         dcCurrentFold[CN_MODEL_FEATURE_IMP] = dcFeatureImportance
         
-        print dcFeatureImportance
-        
         dcResults[i] = dcCurrentFold
         i = i+1
     
@@ -244,7 +242,7 @@ if __name__ == "__main__":
                    nMaxRows=3, lsColors=lsColors)
                    
     #%% modulus
-    lsFileNames = ds.lsYL_l1
+    lsFileNames = ds.lsYL_t19 + ds.lsCYJ_t11 + ds.lsHCY_t1 + ds.lsWW_t3
     lsData = md.loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
     
     lsXYZColumns = ['x0', 'y0', 'z0']
@@ -281,10 +279,7 @@ if __name__ == "__main__":
         fig.tight_layout()
     plt.show()
    
-#%% 
-#==============================================================================
-#     DTW
-#==============================================================================
+#%%  DTW
     lsFileNames = ds.lsZLW_l1[:3]
     lsData = md.loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
     
@@ -294,7 +289,7 @@ if __name__ == "__main__":
     dcDTWDetails, dcDistance = pairwiseFastDTW(lsModulus, lsFileNames)
     dfDistanceMatrix = pd.DataFrame(dcDistance)
     
-    # %% MDS
+#%% MDS
     mds = manifold.MDS(n_components=3, dissimilarity="precomputed", 
                        random_state=7)
     results = mds.fit(dfDistanceMatrix.as_matrix() )
@@ -320,14 +315,12 @@ if __name__ == "__main__":
     plt.show()
     
     
-# %%    
-#==============================================================================
-#     feature extraction
-#==============================================================================
+#%%  feature extraction
     lsFileNames = ds.lsYL_t19 + ds.lsYL_t20 + ds.lsYL_t21 + \
                   ds.lsCYJ_t11 + ds.lsCYJ_t11 + ds.lsCYJ_t11 + \
                   ds.lsHCY_t1 + ds.lsHCY_t2 + ds.lsHCY_t3 + \
                   ds.lsWW_t3
+                  
     dcUserID = {"yl":1, "cy":2, "hc":3, "ww":4}
     lsData = md.loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
     
@@ -351,45 +344,36 @@ if __name__ == "__main__":
         dcFeatureLabel[CN_MODULUS_MAX] = dfStat['max']
         
     
-        # statistics of arm's resonant band
-        nLowCut = 15
-        nHighCut = 30
-        arrFiltered = bp_filter.butter_bandpass_filter(dfModulus[CN_MODULUS].values,
-                                                       nLowCut, nHighCut,
-                                                       dSamplingFreq, order=9)
-        dfBandStat = pd.Series(arrFiltered).describe()
-        dcFeatureLabel[CN_BAND_MEAN] = dfBandStat['mean']
-        dcFeatureLabel[CN_BAND_STD] = dfBandStat['std']
-        dcFeatureLabel[CN_BAND_MIN] = dfBandStat['min']
-        dcFeatureLabel[CN_BAND_25P] = dfBandStat['25%']
-        dcFeatureLabel[CN_BAND_50P] = dfBandStat['50%']
-        dcFeatureLabel[CN_BAND_75P] = dfBandStat['75%']
-        dcFeatureLabel[CN_BAND_MAX] = dfBandStat['max']
-         
+        # statistics of each freq band
+        nBandWidth = 5
+        for nLow in xrange(5, int(dSamplingFreq/2.0)-5, nBandWidth):
+            nHigh = nLow + nBandWidth
+            arrFiltered = bp_filter.butter_bandpass_filter(dfModulus[CN_MODULUS].values,
+                                                           nLow, nHigh,
+                                                           dSamplingFreq, order=9)
+            dfBandStat = pd.Series(arrFiltered).describe()
+            dcFeatureLabel["%s_%dHZ" % (CN_BAND_MEAN, nLow) ] = dfBandStat['mean']
+            dcFeatureLabel["%s_%dHZ" % (CN_BAND_STD, nLow) ] = dfBandStat['std']
+            dcFeatureLabel["%s_%dHZ" % (CN_BAND_MIN, nLow) ] = dfBandStat['min']
+            dcFeatureLabel["%s_%dHZ" % (CN_BAND_25P, nLow) ] = dfBandStat['25%']
+            dcFeatureLabel["%s_%dHZ" % (CN_BAND_50P, nLow) ] = dfBandStat['50%']
+            dcFeatureLabel["%s_%dHZ" % (CN_BAND_75P, nLow) ] = dfBandStat['75%']
+            dcFeatureLabel["%s_%dHZ" % (CN_BAND_MAX, nLow) ] = dfBandStat['max']
+             
         lsTuples.append(dcFeatureLabel)
         
     dfTuples = pd.DataFrame(lsTuples)
 
-#%%    
-#==============================================================================
-#     classification
-#==============================================================================
+#%% classification
     # prepare train & testing set
-    lsFeatureColumns = [CN_MODULUS_MEAN, CN_MODULUS_STD, 
-                        CN_MODULUS_MIN, CN_MODULUS_25P,
-                        CN_MODULUS_50P, CN_MODULUS_75P,
-                        CN_MODULUS_MAX, 
-                        CN_BAND_MEAN, CN_BAND_STD, 
-                        CN_BAND_MIN, CN_BAND_25P,
-                        CN_BAND_50P, CN_BAND_75P,
-                        CN_BAND_MAX]
+    lsFeatureColumns = [ col for col in dfTuples.columns if col != CN_LABEL]
     strLabelColumn = CN_LABEL
     mtX = dfTuples[lsFeatureColumns].as_matrix()
     arrY = dfTuples[strLabelColumn].values
     
     # model setup
     strModelName = 'GBRT'
-    modelParams = {'n_estimators':100} 
+    modelParams = {'n_estimators':500} 
     
 #    strModelName = 'random_forest'
 #    modelParams = {'n_estimators':50} 
@@ -402,10 +386,26 @@ if __name__ == "__main__":
 
     dcResults = classify(mtX, arrY, strModelName, modelParams, lsFeatureColumns, nFold=10)
 
+    
+    
+    # feature importance
+    for nFold, dcFoldResult in dcResults.iteritems():
+        print("Fold %d:" % (nFold) )
+        for k,v in dcFoldResult[CN_MODEL_FEATURE_IMP].iteritems():
+            print k, v
+        print("--")
+        print("Accuracy: %.2f" % (dcFoldResult[CN_MODEL_ACCURACY]) )
+        print ("Sum: %.2f" % \
+               sum(dcFoldResult[CN_MODEL_FEATURE_IMP].values() ) )
+        print("****\n")
+     
+    # overall performance
     lsAccuracy = [ i[CN_MODEL_ACCURACY] for i in dcResults.values()]
     dBestAccuracy = np.max(lsAccuracy)
+    dWorstAccuracy = np.min(lsAccuracy)
     dMeanAccuracy = np.mean(lsAccuracy)
     dAccuracyStd = np.std(lsAccuracy)
-    
-    print("result: best=%.2f, mean=%.2f, std=%.2f" % \
-           (dBestAccuracy, dMeanAccuracy, dAccuracyStd) )
+    print("overall performance: best=%.2f, worst=%.2f, "
+          "mean=%.2f, std=%.2f" % \
+           (dBestAccuracy, dWorstAccuracy, 
+            dMeanAccuracy, dAccuracyStd) )
