@@ -18,7 +18,7 @@ lsCMYK = ['c', 'm', 'y']
 
 def loadData(strWorkingDir, strFileName, lsColumnNames, strFileExt = '.txt'):
     """
-        This function loads and clears acceleromter data
+        This function loads and clears a single acceleromter data
         
         Parameters
         ----------
@@ -104,16 +104,16 @@ def removeGravity(dfXYZ, nStart=0, nEnd=1000):
     
 #%%
 if __name__ == '__main__':
-    #%% 
-    #==============================================================================
-    # setup
-    #==============================================================================
+    import sys
+    sys.exit(0)
+    
+    #%%  setup
     dSamplingFreq = 160.0
     
     strWorkingDir = ("D:\\yanglin\\baidu_cloud\\research\\my_research\\"
-                     "resonance_lab\\data\\feasibility_v6\\")
+                     "resonance_lab\\data\\")
     
-    strFileName = "yl_t1_l1_40"
+    strFileName = "yl_new_30"
     
     lsColumnNames = ['x0', 'y0','z0', 'gx0', 'gy0','gz0',
                      'x1', 'y1','z1', 'gx1', 'gy1','gz1']
@@ -122,16 +122,11 @@ if __name__ == '__main__':
     
     strBasicFontName = "Times new Roman"
     
-    #==============================================================================
     # load data
-    #==============================================================================
     dfData = loadData(strWorkingDir, strFileName, lsColumnNames)
     
-    #%% 
-    #==============================================================================
-    # visualize time-domain
-    #==============================================================================
-    lsAxis2Inspect = ['x0', 'y0', 'z0', 'x1', 'y1', 'z1']
+    #%%  visualize time-domain
+    lsAxis2Inspect = ['x0', 'y0', 'z0','x1', 'y1', 'z1']
     lsColors = lsRGB*6
     
     nPlotStartPoint = 0
@@ -150,11 +145,8 @@ if __name__ == '__main__':
     plt.tight_layout()
     plt.show()
     
-    #%%
-    #==============================================================================
-    #     plot modulus
-    #==============================================================================
-    lsAxis2Inspect = ['x0', 'y0', 'z0', 'x1', 'y1', 'z1']
+    #%% plot modulus
+    lsAxis2Inspect = ['x0', 'y0', 'z0']
     lsColors = lsRGB*2
     
     nPlotStartPoint = 0
@@ -181,10 +173,7 @@ if __name__ == '__main__':
     plt.tight_layout()
     plt.show()
     
-#    #%% 
-#    #==============================================================================
-#    # band pass filter
-#    #==============================================================================
+#    #%%  band pass filter
 #    #nBPFilterStart = 0
 #    #nBPFilterEnd = nBPFilterStart + (5*60*dSamplingFreq)
 #    #
@@ -258,10 +247,7 @@ if __name__ == '__main__':
 #        
 #    plt.show()
     
-#    #%% 
-#    #==============================================================================
-#    # visualize specgram
-#    #==============================================================================
+#    #%%  visualize specgram
 #
 #    lsAxis2Inspect = ['x0', 'y0', 'z0', 'x1', 'y1', 'z1']
 #    lsColors = lsRGB*2

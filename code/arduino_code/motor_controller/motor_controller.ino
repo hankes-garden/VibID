@@ -47,7 +47,7 @@ void loop() {
     else // < 0, sweep from 0 to specific input
     {
       g_nMaxIntensity = min(abs(nInput), MAX_INTENSITY); // set maximum of sweeping
-      g_nCurrentIntensity = 30;
+      g_nCurrentIntensity = 20;
       g_bSweep = true;
       Serial.println("-->start to sweep...");
       delay(RESET_DURATION);

@@ -11,8 +11,50 @@ import pandas as pd
 import math
 import scipy.fftpack as fftpack
 from matplotlib import colors, cm
-import single_data
+import single_data as sd
 import bp_filter
+import dataset as ds
+
+CN_MODULUS = "modulus"
+
+def plotSpecgramEx(lsData, lsDataNames, strColumn2inspect, nMaxRows=3):
+    nData2Plot = len(lsData)
+    nSubplotRows = nMaxRows if nData2Plot>=nMaxRows else nData2Plot
+    nSubplotCols = int(math.ceil(nData2Plot*1.0/nMaxRows))
+    
+    fig, axes = plt.subplots(nrows=nSubplotRows, ncols=nSubplotCols, squeeze=False)
+    for i, (dfData, strDataName) in enumerate(zip(lsData, lsDataNames) ):
+                            
+        nRow2plot = i % nMaxRows
+        nCol2Plot = i / nMaxRows
+        
+        Pxx, freqs, bins, im = axes[nRow2plot, nCol2Plot].specgram(dfAcc['y1'].values, 
+                                       NFFT=int(dSamplingFreq), 
+                                       Fs=dSamplingFreq,
+                                       noverlap=int(dSamplingFreq/2.0))
+        axes[nRow2plot, nCol2Plot].set_xlabel("Time", 
+                                              fontname=strBasicFontName, 
+                                              fontsize=18)
+        axes[nRow2plot, nCol2Plot].set_ylabel("Frequency", 
+                                              fontname=strBasicFontName, 
+                                              fontsize=18)
+    plt.tight_layout()
+    plt.show()
+    
+    
+    
+    plt.tight_layout()
+
+def computeModulusEx(lsData, lsXYZColumns, dSamplingFreq=160.0):
+    """compute modulus for a list of data"""
+    lsModulus = []
+    for dfData in lsData:
+        dfXYZ = dfData[lsXYZColumns]
+        dfXYZ_noG = sd.removeGravity(dfXYZ, nEnd=int(dSamplingFreq * 3) )
+        arrModulus = sd.computeModulus(dfXYZ_noG)
+        dfModulus = pd.DataFrame(arrModulus, columns=[CN_MODULUS])
+        lsModulus.append(dfModulus)
+    return lsModulus
 
 def getColorList(nColors, strColorMap = 'gist_rainbow'):
     colorMap = plt.get_cmap(strColorMap)
@@ -71,9 +113,7 @@ def plotModolus(lsData, lsDataNames, lsXYZ,
     fig, axes = plt.subplots(nrows=nSubplotRows, ncols=nSubplotCols, squeeze=False)
     for i, (dfData, strDataName) in enumerate(zip(lsData, lsDataNames) ):
         dfXYZ = dfData[lsXYZ]
-        dfXYZ_noG = single_data.removeGravity(dfXYZ, 
-                                              nStart=0, 
-                                              nEnd=dSamplingFreq*3)
+        dfXYZ_noG = sd.removeGravity(dfXYZ, nStart=0, nEnd=dSamplingFreq*3)
         arrModulus = np.sqrt(np.power(dfXYZ_noG.iloc[:,0], 2.0) + 
                              np.power(dfXYZ_noG.iloc[:, 1], 2.0) + 
                              np.power(dfXYZ_noG.iloc[:, 2], 2.0) )
@@ -128,9 +168,7 @@ def fftOnModulus(lsData, lsXYZColumns, dSamplingFreq, nDCEnd=5):
         arrFreqIndex = np.linspace(nDCEnd*dResolution, dSamplingFreq/2.0, nSamples/2-nDCEnd)
         
         #remove gravity
-        dfXYZ_noG = single_data.removeGravity(dfXYZ, 
-                                              nStart=0, 
-                                              nEnd=dSamplingFreq*2)
+        dfXYZ_noG = sd.removeGravity(dfXYZ,nStart=0, nEnd=dSamplingFreq*2)
         # compute modulus
         arrModulus = np.sqrt(np.power(dfXYZ_noG.iloc[:,0], 2.0) + 
                              np.power(dfXYZ_noG.iloc[:, 1], 2.0) + 
@@ -208,15 +246,13 @@ def frfEx(lsData, lsDataName, dSamplingFreq,
             nFFTEnd = min(nData2FFT, nFFTStart+nBinSize)
             
             # get raw data
-            arrResp_t = single_data.computeModulus(
-                            single_data.removeGravity(dfResp, 
-                                                      nBaseLineStart, 
-                                                      nBaseLineEnd) )
+            arrResp_t = sd.computeModulus( sd.removeGravity(dfResp,
+                                                            nBaseLineStart,
+                                                            nBaseLineEnd) )
                                                       
-            arrExc_t = single_data.computeModulus(
-                            single_data.removeGravity(dfExc, 
-                                                      nBaseLineStart, 
-                                                      nBaseLineEnd) )
+            arrExc_t = sd.computeModulus( sd.removeGravity(dfExc,
+                                                           nBaseLineStart,
+                                                           nBaseLineEnd) )
             
             nSamples = len(arrResp_t)
             
@@ -258,11 +294,11 @@ def frfEx(lsData, lsDataName, dSamplingFreq,
             
             axes[nRow2plot, nCol2Plot].set_ylim(0.0, 2.5)
             
-            plt.setp(ax.get_xticklabels(),
+            plt.setp(axes[nRow2plot, nCol2Plot].get_xticklabels(),
                      fontname=strBasicFontName, 
                      fontsize=nBasicFontSize, 
                      rotation=90)
-            plt.setp(ax.get_yticklabels(),
+            plt.setp(axes[nRow2plot, nCol2Plot].get_yticklabels(),
                      fontname=strBasicFontName, 
                      fontsize=nBasicFontSize)
             
@@ -276,6 +312,8 @@ def frfEx(lsData, lsDataName, dSamplingFreq,
     plt.show()
     
     
+
+
 #%%
 if __name__ == '__main__':
     import sys
@@ -294,98 +332,12 @@ if __name__ == '__main__':
     
     nBasicFontSize = 16
     
-    # QY
-    lsQY_t1= ['qy_1_1_60', 'qy_1_1_45', 'qy_1_1_45_1', 'qy_1_1_45_2', 'qy_1_1_60_1']
-    
-    # CYJ
-    lsCYJ_t1 = ['cyj_55', 'cyj_60', 'cyj_75', 
-                'cyj_80','cyj_90']
-                
-    lsCYJ_t2 = ['cyj2_55', 'cyj2_70', 'cyj2_85']
-    
-    lsCYJ_t5 = ['cyj_t5_l1_45_1', 'cyj_t5_l1_45', 'cyj_t5_l1_35', 
-                'cyj_t5_l2_50', 'cyj_t5_l2_35', 'cyj_t5_l2_45']
-                
-    lsCYJ_t6 = ['cyj_t6_l1_35', 'cyj_t6_l1_35_1', 'cyj_t6_l1_45']
-    
-    lsCYJ_t7 = ['cyj_t7_l1_35', 'cyj_t7_l1_40', 'cyj_t7_l1_40_1']
-    
-    lsCYJ_t8 = ['cyj_t8_l1_30', 'cyj_t8_l1_40', 'cyj_t8_l1_45']
-    
-    lsCYJ_t9 = ['cyj_t9_l1_40', 'cyj_t9_l1_40_1', 'cyj_t9_l1_40_2']
-    
-    lsCYJ_t10 = ['cyj_t10_l1_40', 'cyj_t10_l1_40_1', 'cyj_t10_l1_40_2']
-    
-    # ZF
-    lsFAN_t1 = ['fan_55', 'fan_60', 'fan_60_1', 
-                'fan_60_2', 'fan_65']
-    
-    # WW
-    lsWW = ['ww_3_40', 'ww_3_40_1', 'ww_3_45',
-            'ww_4_40', 'ww_4_45', 'ww_4_45_1']
-    
-    # YL
-    lsYL_t1 = ['yl_4_50', 'yl_4_75','yl_4_80']
-    lsYL_t2 = ['yl_4_50_v2', 'yl_4_55_v2', 'yl_4_65_v2']
-    lsYL_t3= ['yl_t1_l2_0',]
-    
-    lsYL_t5 = ['yl_t5_l1_40', 'yl_t5_l1_40_1', 'yl_t5_l1_40_2', 
-               'yl_t5_l2_35', 'yl_t5_l2_40', 'yl_t5_l2_40_1']
-               
-    lsYL_t6 = ['yl_t6_l1_30', 'yl_t6_l1_45', 'yl_t6_l1_40', 
-               'yl_t6_l2_35', 'yl_t6_l2_40_1', 'yl_t6_l2_40']
-               
-    lsYL_t7 = ["yl_t7_l1_65_2", "yl_t7_l1_65_1", "yl_t7_l1_65", 
-               "yl_t7_l2_65", "yl_t7_l2_60_1", "yl_t7_l2_60"]
-               
-    lsYL_t8 = ['yl_t8_l1_40_1', 'yl_t8_l1_40', 'yl_t8_l1_45', 
-               'yl_t8_l2_45', 'yl_t8_l2_40_1', 'yl_t8_l2_40']
-               
-    lsYL_t9 = ["yl_t9_l2_40", "yl_t9_l2_30", "yl_t9_l2_40_1"]
-    
-    lsYL_t10 = ["yl_t10_l2_40", "yl_t10_l2_45", "yl_t10_l2_50"]
-    
-    lsYL_t11 = ["yl_t11_l1_40", "yl_t11_l1_45", "yl_t11_l1_45_1", 
-                "yl_t11_l10_40", "yl_t11_l10_55", "yl_t11_l10_75", 
-                "yl_t11_l4_55", "yl_t11_l4_60", "yl_t11_l4_65"]
-                
-    lsYL_t12 = ["yl_t12_l1_40", "yl_t12_l1_40_1", "yl_t12_l1_40_2"]
-    
-    lsYL_t13 = ["yl_t13_l1_45", "yl_t13_l1_65", "yl_t13_l1_70"]
-    
-    lsYL_t14 = ["yl_t14_l1_35", "yl_t14_l1_35_1", "yl_t14_l1_40"]
-    
-    lsYL_t15 = ["yl_t15_l1_35", "yl_t15_l1_40", "yl_t15_l1_50"]
-    
-    lsYL_t16 = ["yl_t16_l1_35", "yl_t16_l1_40", "yl_t16_l1_40_1"]
-    
-    lsYL_t17 = ["yl_t17_l1_35", "yl_t17_l1_35_1", "yl_t17_l1_35_2"]
-    
-    lsYL_t18 = ["yl_t18_l1_45", "yl_t18_l1_35", "yl_t18_l1_35_1"]
-                
-    lsWW_t2 = ["ww_t2_l1_70", "ww_t2_l1_45", "ww_t2_l1_60",
-                "ww_t2_l10_65", "ww_t2_l10_70", "ww_t2_l10_85",
-                "ww_t2_l4_60", "ww_t2_l4_65", "ww_t2_l4_70"]
-    
-    lsMotor_t1 = ['motor_gx_0', 'motor_gx_1', 'motor_gx_2', 
-                  'motor_gx_3', 'motor_gx_4', 'motor_gx_5']
-  
-    lsMotor_t2 = ['motor_gy_0', 'motor_gy_1', 'motor_gy_2', 
-                  'motor_gy_3', 'motor_gy_4', 'motor_gy_5']
-                  
-    lsMotor_t3 = ['motor_gz_0', 'motor_gz_1', 'motor_gz_2', 
-                  'motor_gz_3', 'motor_gz_4', 'motor_gz_5']
-                  
-    lsTest = ["test", "test1", "test2", "test3", "test4"]
-                  
-                     
     #%% data to load
     dSamplingFreq = 160.0
     strWorkingDir = ("D:\\yanglin\\baidu_cloud\\research\\my_research\\resonance_lab\\"
-                     "data\\feasibility_v6\\")
+                     "data\\feasibility_v7\\")
     
-    lsFileNames = lsCYJ_t6 + lsCYJ_t7 + lsCYJ_t8+ lsCYJ_t9 + lsCYJ_t10
-    
+    lsFileNames = ds.lsCYJ_t11 + ds.lsCYJ_t12 + ds.lsCYJ_t13
     
     #%% statistics of time domain
     lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
@@ -406,7 +358,7 @@ if __name__ == '__main__':
     lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
     nAxesPerFig = len(lsFileNames)
     lsColors = [c for c in lsBasicColors for _ in xrange(nAxesPerFig)]
-    lsColumn2Plot = ['x0', 'y0', 'z0', 'x1', 'y1', 'z1']
+    lsColumn2Plot = ['x0', 'y0', 'z0']
     plotByDataAxis(lsData, lsFileNames, lsColumn2Plot,
                    nStartPoint=0, nEndPoint=-1, 
                    nMaxRows=3, lsColors=lsColors)
@@ -439,16 +391,7 @@ if __name__ == '__main__':
         
     #%% visualize time + freq = specgram
     lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    Pxx, freqs, bins, im = ax.specgram(dfAcc['y1'].values, 
-                                       NFFT=int(dSamplingFreq), 
-                                       Fs=dSamplingFreq,
-                                       noverlap=int(dSamplingFreq/2.0))
-    ax.set_xlabel("Time", fontname=strBasicFontName, nBasicFontSize=18)
-    ax.set_ylabel("Frequency", fontname=strBasicFontName, nBasicFontSize=18)
-    fig.colorbar(im).set_label('power')
-    plt.tight_layout()
+    plotSpecgramEx(lsData, lsFileNames, "x0")
     
     #%% FRF
     lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)

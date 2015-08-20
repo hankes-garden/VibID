@@ -1,46 +1,21 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Aug 11 18:03:07 2015
-
-@author: jason
-"""
-
-import csv
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
-from sklearn import manifold
 
-# Distance file available from RMDS project:
-#    https://github.com/cheind/rmds/blob/master/examples/european_city_distances.csv
-reader = csv.reader(open("d:\\playground\\distance.csv", "r"), delimiter=';')
-data = list(reader)
+def randrange(n, vmin, vmax):
+    return (vmax-vmin)*np.random.rand(n) + vmin
 
-dists = []
-cities = []
-for d in data:
-    cities.append(d[0])
-    dists.append(map(float , d[1:-1]))
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+n = 100
+for c, m, zl, zh in [('r', 'o', -50, -25), ('b', '^', -30, -5)]:
+    xs = randrange(n, 23, 32)
+    ys = randrange(n, 0, 100)
+    zs = randrange(n, zl, zh)
+    ax.scatter(xs, ys, zs, c=c, marker=m)
 
-# normalize
-adist = np.array(dists)
-amax = np.amax(adist)
-adist /= amax
-
-mds = manifold.MDS(n_components=2, dissimilarity="precomputed", random_state=6)
-results = mds.fit(adist)
-
-coords = results.embedding_
-
-plt.subplots_adjust(bottom = 0.1)
-plt.scatter(
-    coords[:, 0], coords[:, 1], marker = 'o'
-    )
-for label, x, y in zip(cities, coords[:, 0], coords[:, 1]):
-    plt.annotate(
-        label,
-        xy = (x, y), xytext = (-20, 20),
-        textcoords = 'offset points', ha = 'right', va = 'bottom',
-        bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
-        arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+ax.set_xlabel('X Label')
+ax.set_ylabel('Y Label')
+ax.set_zlabel('Z Label')
 
 plt.show()
