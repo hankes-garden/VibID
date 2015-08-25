@@ -12,9 +12,20 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import bp_filter
 import math
+import dataset as ds
 
 lsRGB = ['r', 'g', 'b']
 lsCMYK = ['c', 'm', 'y']
+
+def computeEnvelope(arrData, nWindow, nMinPeriods=1):
+    """compute upper and lower envelope for given data"""
+    arrUpperEnvelope = pd.rolling_max(pd.Series(arrData), window=nWindow,
+                                      min_periods=nMinPeriods)
+    arrLowerEnvelope = pd.rolling_min(pd.Series(arrData), window=nWindow,
+                                     min_periods=nMinPeriods)
+                                     
+    return arrUpperEnvelope, arrLowerEnvelope
+
 
 def loadData(strWorkingDir, strFileName, lsColumnNames, strFileExt = '.txt'):
     """
@@ -101,6 +112,8 @@ def removeGravity(dfXYZ, nStart=0, nEnd=1000):
     dfXYZ_noG = dfXYZ - srGravity
     
     return dfXYZ_noG
+
+    
     
 #%%
 if __name__ == '__main__':
@@ -110,10 +123,9 @@ if __name__ == '__main__':
     #%%  setup
     dSamplingFreq = 160.0
     
-    strWorkingDir = ("D:\\yanglin\\baidu_cloud\\research\\my_research\\"
-                     "resonance_lab\\data\\")
+    strWorkingDir = "../../data/feasibility_v7/"
     
-    strFileName = "yl_new_30"
+    strFileName = ds.lsYL_t20[0]
     
     lsColumnNames = ['x0', 'y0','z0', 'gx0', 'gy0','gz0',
                      'x1', 'y1','z1', 'gx1', 'gy1','gz1']
@@ -151,6 +163,69 @@ if __name__ == '__main__':
     
     nPlotStartPoint = 0
     nPlotEndPoint = -1
+    nRows= 1
+    nCols = 1
+    fig, axes = plt.subplots(nrows=nRows, ncols=nCols, squeeze=False)
+    
+    dfData_filtered = dfData[lsAxis2Inspect]
+    for i in xrange(len(dfData_filtered.columns) ):
+        if (i % 3 == 0):
+            dfXYZ = dfData_filtered.iloc[:, i:i+3]
+            strFormula = "sqrt(%s^2+%s^2+%s^2)" % (tuple(dfXYZ.columns) )
+
+            dfXYZ_noG = removeGravity(dfXYZ, nStart=0, nEnd=dSamplingFreq*3)
+            
+            arrModulus = computeModulus(dfXYZ_noG)
+            axes[i%nRows, 0].plot(arrModulus, color='b', lw=1, alpha=0.7)
+            
+            # plot envelope
+            nWindow = 30
+            arrUpperEnvelope = pd.rolling_max(pd.Series(arrModulus), window=nWindow,
+                                              min_periods=1)
+            arrLowerEnvelope = pd.rolling_min(pd.Series(arrModulus), window=nWindow,
+                                             min_periods=1)
+                                              
+            axes[i%nRows, 0].plot(arrUpperEnvelope, color='r', lw=2, alpha=0.7)
+            axes[i%nRows, 0].plot(arrLowerEnvelope, color='r', lw=2, alpha=0.7)
+            
+            axes[i%nRows, 0].set_xlabel(strFormula )
+            
+            
+    fig.suptitle(strFileName + ": modulus", 
+                 fontname=strBasicFontName, 
+                 fontsize=nBasicFontSize)
+    plt.tight_layout()
+    plt.show()
+    
+    #%%  band pass filter
+    nBPFilterStart = 0
+    nBPFilterEnd = nBPFilterStart + (5*60*dSamplingFreq)
+    
+    nBandWidth = 10
+    for nLowCut in xrange(0, int(dSamplingFreq/2.0), nBandWidth):
+        nHighCut = nLowCut + nBandWidth
+        fig, axes = plt.subplots(nrows=len(dfData.columns), ncols=1)
+        for i, col in enumerate(dfData.columns):
+            # bp filter
+            arrFiltered= bp_filter.butter_bandpass_filter( \
+            dfData[col].values[nBPFilterStart:nBPFilterEnd], \
+            nLowCut, nHighCut, dSamplingFreq, order=9)
+            
+            #visualize
+            axes[i].plot(dfData.index[nBPFilterStart:nBPFilterEnd], arrFiltered, lsColors[i])
+    
+        fig.suptitle("bpfilter: %d ~ %d Hz" % (nLowCut, nHighCut), \
+                     fontname=strBasicFontName, 
+                     fontsize=nBasicFontSize)
+    plt.tight_layout()
+    plt.show()
+    
+    #%% plot freq domain for modulus
+    lsAxis2Inspect = ['x0', 'y0', 'z0', 'x1', 'y1', 'z1']
+    lsColors = lsRGB*2
+    
+    nPlotStartPoint = 0
+    nPlotEndPoint = -1
     nRows= 2
     nCols = 1
     fig, axes = plt.subplots(nrows=nRows, ncols=nCols, squeeze=False)
@@ -164,7 +239,18 @@ if __name__ == '__main__':
             dfXYZ_noG = removeGravity(dfXYZ, nStart=0, nEnd=dSamplingFreq*3)
             
             arrModulus = computeModulus(dfXYZ_noG)
-            axes[i%nRows, 0].plot(arrModulus)
+            
+            # bp filter
+            arrFiltered = bp_filter.butter_bandpass_filter(arrModulus, 10, 75,
+                                                           dSamplingFreq, order=9)
+            
+            # fft
+            nSamples = len(arrFiltered)
+            arrFreq = fftpack.fft(arrModulus)[10:nSamples/2]
+            arrFreq_normalized = arrFreq/(nSamples*1.0)
+            
+            
+            axes[i%nRows, 0].plot(np.abs(arrFreq_normalized) )
             axes[i%nRows, 0].set_xlabel(strFormula )
             
     fig.suptitle(strFileName + ": modulus", 
@@ -172,81 +258,7 @@ if __name__ == '__main__':
                  fontsize=nBasicFontSize)
     plt.tight_layout()
     plt.show()
-    
-#    #%%  band pass filter
-#    #nBPFilterStart = 0
-#    #nBPFilterEnd = nBPFilterStart + (5*60*dSamplingFreq)
-#    #
-#    #nBandWidth = 10
-#    #for nLowCut in xrange(0, int(dSamplingFreq/2.0), nBandWidth):
-#    #    nHighCut = nLowCut + nBandWidth
-#    #    fig, axes = plt.subplots(nrows=len(dfData.columns), ncols=1)
-#    #    for i, col in enumerate(dfData.columns):
-#    #        # bp filter
-#    #        arrFiltered= bp_filter.butter_bandpass_filter( \
-#    #        dfData[col].values[nBPFilterStart:nBPFilterEnd], \
-#    #        nLowCut, nHighCut, dSamplingFreq, order=9)
-#    #        
-#    #        #visualize
-#    #        axes[i].plot(dfData.index[nBPFilterStart:nBPFilterEnd], arrFiltered, lsColors[i])
-#    #
-#    #    fig.suptitle("bpfilter: %d ~ %d Hz" % (nLowCut, nHighCut), \
-#    #                 fontname=strBasicFontName, 
-#    #                 fontsize=nBasicFontSize)
-#    #plt.tight_layout()
-#    #plt.show()
-#    
-#    #%% 
-#    #==============================================================================
-#    # visualized freq-domain
-#    #==============================================================================
-#    nData2FFT = len(dfData)
-#    
-#    nFFTStart = 0
-#    nFFTEnd = 0
-#    nBinSize = int(dSamplingFreq)*1000
-#    while (nFFTStart < nData2FFT ):
-#        nFFTEnd = min(nData2FFT, nFFTStart+nBinSize)
-#        
-#        fig, axes = plt.subplots(nrows=len(dfData.columns), ncols=1)
-#        for i, col in enumerate(dfData.columns):
-#            arrTimeDataSlice = dfData[col].values[nFFTStart:nFFTEnd]
-#            
-#            nSamples = len(arrTimeDataSlice)
-#            nDCEnd = 3
-#            
-#            # high pass filter
-#            arrFiltered= bp_filter.butter_bandpass_filter( \
-#            arrTimeDataSlice, 1, 189, dSamplingFreq, order=9)
-#            
-#            # fft
-#            arrFreqData = fftpack.fft(arrTimeDataSlice)
-#            arrFreqData_normalized = arrFreqData/(nSamples*1.0)
-#            
-#            xf = np.linspace(float(nDCEnd), dSamplingFreq/2.0, nSamples/2.0-nDCEnd)
-#            
-#            axes[i].plot(xf, np.abs(arrFreqData_normalized[nDCEnd:nSamples/2]), lsColors[i])
-#    
-#            # setup looks
-#    #        axes[i].set_xlabel("Freq", fontname='Times new Roman', fontsize=18)
-#    #        axes[i].set_ylabel("Power", fontname='Times new Roman', fontsize=18)
-#            
-#            axes[i].set_xticks(np.arange(0, int(dSamplingFreq/2.0)+1, 5.0) )
-#            
-#    #        axes[i].set_ylim(0.0, 100.0)
-#    #        axes[i].set_xlim(0.0, 50.0)
-#            
-#    #        axes[i].set_yscale('log');
-#            
-#            plt.setp(axes[i].get_xticklabels(), fontname='Times new Roman', fontsize=16, rotation=90)
-#            plt.setp(axes[i].get_yticklabels(), fontname='Times new Roman', fontsize=16)
-#        
-#        fig.suptitle(strFileName + "@ frequency domain", fontname='Times new Roman', fontsize=16)
-#        plt.tight_layout()
-#        nFFTStart = nFFTEnd
-#        
-#    plt.show()
-    
+   
 #    #%%  visualize specgram
 #
 #    lsAxis2Inspect = ['x0', 'y0', 'z0', 'x1', 'y1', 'z1']

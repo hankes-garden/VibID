@@ -100,10 +100,10 @@ def plotByDataAxis(lsData, lsDataNames, lsAxis2Plot,
             plt.tight_layout()
     plt.show()
     
-def plotModolus(lsData, lsDataNames, lsXYZ,
+def plotModolusEx(lsData, lsDataNames, lsXYZ, dSamplingFreq,
                 arrXTicks=None, strFontName='Times new Roman',
                 nFontSize=14, nMaxRows = 3,
-                lsColors=None):
+                lsColors=None, bPlotShapeLine=False):
     """plot modulus for a list of data"""
     nData2Plot = len(lsData)
     nSubplotRows = nMaxRows if nData2Plot>=nMaxRows else nData2Plot
@@ -120,7 +120,13 @@ def plotModolus(lsData, lsDataNames, lsXYZ,
                              
         nRow2plot = i % nMaxRows
         nCol2Plot = i / nMaxRows
-        axes[nRow2plot, nCol2Plot].plot(arrModulus, color=lsColors[i])
+#        axes[nRow2plot, nCol2Plot].plot(arrModulus, color=lsColors[i])
+        if (bPlotShapeLine is True):
+            arrUpperEnv, arrLowerEnv = sd.computeEnvelope(arrModulus, nWindow=30)
+            arrMean = pd.rolling_mean(arrModulus, window=50)
+            axes[nRow2plot, nCol2Plot].plot(arrUpperEnv, color='m', lw=1, alpha=0.7)
+            axes[nRow2plot, nCol2Plot].plot(arrLowerEnv, color='m', lw=1, alpha=0.7)
+            axes[nRow2plot, nCol2Plot].plot(arrMean, color='g', lw=1, alpha=1.0)
         axes[nRow2plot, nCol2Plot].set_xlabel(strDataName)
         axes[nRow2plot, nCol2Plot].grid()
     plt.tight_layout()
@@ -337,7 +343,7 @@ if __name__ == '__main__':
     strWorkingDir = ("D:\\yanglin\\baidu_cloud\\research\\my_research\\resonance_lab\\"
                      "data\\feasibility_v7\\")
     
-    lsFileNames = ds.lsCYJ_t11 + ds.lsCYJ_t12 + ds.lsCYJ_t13
+    lsFileNames = ds.lsYL_t19 + ds.lsHCY_t1 + ds.lsWW_t3
     
     #%% statistics of time domain
     lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
@@ -368,17 +374,17 @@ if __name__ == '__main__':
     
     lsColors = ['b']*len(lsData)
     lsColumn2Plot = ['x0', 'y0', 'z0']
-    plotModolus(lsData, lsFileNames, lsColumn2Plot,
-                nMaxRows=3, lsColors=lsColors)
+    plotModolusEx(lsData, lsFileNames, lsColumn2Plot, dSamplingFreq,
+                nMaxRows=3, lsColors=lsColors, bPlotShapeLine=True)
                 
     lsColumn2Plot = ['x1', 'y1', 'z1']
-    plotModolus(lsData, lsFileNames, lsColumn2Plot,
-                nMaxRows=3, lsColors=lsColors)
+    plotModolusEx(lsData, lsFileNames, lsColumn2Plot, dSamplingFreq,
+                nMaxRows=3, lsColors=lsColors, bPlotShapeLine=True)
     #%% fft for modulus
     lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
     
     lsColors = ['b']*len(lsData)
-    lsXYZColumns = ['x0', 'y0', 'z0']
+    lsXYZColumns = ['x1', 'y1', 'z1']
     lsFreqData = fftOnModulus(lsData, lsXYZColumns, dSamplingFreq, nDCEnd=50)
     
     lsMagnitudeData = []
