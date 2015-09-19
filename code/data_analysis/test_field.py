@@ -1,21 +1,14 @@
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
-def randrange(n, vmin, vmax):
-    return (vmax-vmin)*np.random.rand(n) + vmin
-
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-n = 100
-for c, m, zl, zh in [('r', 'o', -50, -25), ('b', '^', -30, -5)]:
-    xs = randrange(n, 23, 32)
-    ys = randrange(n, 0, 100)
-    zs = randrange(n, zl, zh)
-    ax.scatter(xs, ys, zs, c=c, marker=m)
-
-ax.set_xlabel('X Label')
-ax.set_ylabel('Y Label')
-ax.set_zlabel('Z Label')
-
-plt.show()
+if __name__ == "__main__":
+    w = np.linspace(1.0, 100.0, 1000)
+    
+    wn = 35.0
+    
+    for xi in np.linspace(0.1, 0.9, 10):
+        A = 1.0 / np.sqrt( (1-(w/wn)**2)**2 + (2*xi*w/wn)**2 )
+        plt.plot(w, A, label=xi)
+    plt.legend()
+    plt.show()
+    

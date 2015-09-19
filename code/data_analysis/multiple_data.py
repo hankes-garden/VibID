@@ -64,7 +64,7 @@ def getColorList(nColors, strColorMap = 'gist_rainbow'):
     lsColors=[scalarMap.to_rgba(i) for i in xrange(nColors)]
     return lsColors
 
-def plotByDataAxis(lsData, lsDataNames, lsAxis2Plot,
+def plotByDataAxis(lsData, lsDataNames, lsAxes2Plot,
                    nStartPoint = 0, nEndPoint = -1,
                    arrXTicks=None, strFontName='Times new Roman',
                    nFontSize=14, nMaxRows = 3,
@@ -80,7 +80,7 @@ def plotByDataAxis(lsData, lsDataNames, lsAxis2Plot,
                     if len(lsColors) < len(lsData) else lsColors
     
     i = 0
-    for strCol in lsAxis2Plot:
+    for strCol in lsAxes2Plot:
         fig, axes = plt.subplots(nrows=nSubplotRows, ncols=nSubplotCols, squeeze=False)
         for nDataIndex in xrange(len(lsData) ):
             dfAcc = lsData[nDataIndex]
@@ -100,33 +100,80 @@ def plotByDataAxis(lsData, lsDataNames, lsAxis2Plot,
             plt.tight_layout()
     plt.show()
     
+def plotEx(lsData, lsDataNames, lsAxes2Plot, 
+           strFontName='Times new Roman', nFontSize=14, 
+           nMaxColumnPerSubplot = 3, 
+           lsColors=['r', 'g', 'b', 'c', 'm', 'y']):
+    """
+        This function plots all the axes of each data in the same column of one figure,
+        if there are much data to plot, then this function would break them into figures.
+    """
+    nData2Plot = len(lsData)
+    nFigures2Create = int(math.ceil(nData2Plot*1.0/nMaxColumnPerSubplot) )
+    nSubplotRows = len(lsAxes2Plot)
+    nSubplotColumns = min(nData2Plot, nMaxColumnPerSubplot)
+    
+    for i in xrange(nFigures2Create):
+        fig, axes = plt.subplots(nrows=nSubplotRows, ncols=nSubplotColumns, squeeze=False)
+        for j in xrange(nSubplotColumns):
+            dfData = lsData[i*nSubplotColumns+j]
+            for nAxisIndex, strCol in enumerate(lsAxes2Plot):
+                srAxisData = dfData[strCol]
+                nRow2Plot = nAxisIndex % nSubplotRows
+                nCol2Plot = j
+                axes[nRow2Plot, nCol2Plot].plot(srAxisData.index, srAxisData, 
+                                                color=lsColors[nRow2Plot])
+                axes[nRow2Plot, nCol2Plot].set_xlabel("%s_%s" % \
+                                                      (lsDataNames[i*nSubplotColumns+j], strCol),
+                                                      fontname=strFontName,
+                                                      fontsize=nFontSize+2)
+        fig.tight_layout()
+    plt.show()
+    
 def plotModolusEx(lsData, lsDataNames, lsXYZ, dSamplingFreq,
                 arrXTicks=None, strFontName='Times new Roman',
-                nFontSize=14, nMaxRows = 3,
-                lsColors=None, bPlotShapeLine=False):
+                nFontSize=14, nMaxRows = 3, nYMax = 800,
+                lsColors=None, bPlotModulus=True,
+                bPlotShapeLine=False, 
+                bPlotFeatureLines=False):
     """plot modulus for a list of data"""
     nData2Plot = len(lsData)
     nSubplotRows = nMaxRows if nData2Plot>=nMaxRows else nData2Plot
-    nSubplotCols = int(math.ceil(nData2Plot*1.0/nMaxRows))
+    nSubplotCols = int(math.ceil(nData2Plot*1.0/nMaxRows) )
     lsColors = ['b', ] * len(lsData) if lsColors is None else lsColors
     
     fig, axes = plt.subplots(nrows=nSubplotRows, ncols=nSubplotCols, squeeze=False)
     for i, (dfData, strDataName) in enumerate(zip(lsData, lsDataNames) ):
         dfXYZ = dfData[lsXYZ]
-        dfXYZ_noG = sd.removeGravity(dfXYZ, nStart=0, nEnd=dSamplingFreq*3)
-        arrModulus = np.sqrt(np.power(dfXYZ_noG.iloc[:,0], 2.0) + 
+        dfXYZ_noG = sd.removeGravity(dfXYZ, nStart=0, nEnd=int(dSamplingFreq*2) )
+        arrModulus = np.sqrt(np.power(dfXYZ_noG.iloc[:, 0], 2.0) + 
                              np.power(dfXYZ_noG.iloc[:, 1], 2.0) + 
                              np.power(dfXYZ_noG.iloc[:, 2], 2.0) )
                              
         nRow2plot = i % nMaxRows
         nCol2Plot = i / nMaxRows
-#        axes[nRow2plot, nCol2Plot].plot(arrModulus, color=lsColors[i])
+        if (bPlotModulus is True):
+            axes[nRow2plot, nCol2Plot].plot(arrModulus, color=lsColors[i])
+            axes[nRow2plot, nCol2Plot].set_ylim(0, nYMax)
+            
         if (bPlotShapeLine is True):
+            #envelope & mean
             arrUpperEnv, arrLowerEnv = sd.computeEnvelope(arrModulus, nWindow=30)
             arrMean = pd.rolling_mean(arrModulus, window=50)
-            axes[nRow2plot, nCol2Plot].plot(arrUpperEnv, color='m', lw=1, alpha=0.7)
-            axes[nRow2plot, nCol2Plot].plot(arrLowerEnv, color='m', lw=1, alpha=0.7)
-            axes[nRow2plot, nCol2Plot].plot(arrMean, color='g', lw=1, alpha=1.0)
+            axes[nRow2plot, nCol2Plot].plot(arrUpperEnv, color='r', lw=1, alpha=1.0)
+            axes[nRow2plot, nCol2Plot].plot(arrLowerEnv, color='m', lw=1, alpha=1.0)
+            axes[nRow2plot, nCol2Plot].plot(arrMean, color='k', lw=1, alpha=1.0)
+            
+        if(bPlotFeatureLines is True):
+            arrSegments, arrVariationWidth, \
+                nLastIndex = sd.findSegment(arrModulus, dSamplingFreq)
+                
+            for i in arrSegments:
+                axes[nRow2plot, nCol2Plot].axvline(i, color='r')
+            
+            axes[nRow2plot, nCol2Plot].plot(arrVariationWidth, color='g')
+            axes[nRow2plot, nCol2Plot].axvline(nLastIndex, color='k', lw=2)
+            
         axes[nRow2plot, nCol2Plot].set_xlabel(strDataName)
         axes[nRow2plot, nCol2Plot].grid()
     plt.tight_layout()
@@ -283,12 +330,10 @@ def frfEx(lsData, lsDataName, dSamplingFreq,
             nRow2plot = i % nMaxRows        
             nCol2Plot = i / nMaxRows
             
-            xf = np.linspace(nLowFreq, dSamplingFreq/2.0, nSamples/2.0-nDCEnd)
-            axes[nRow2plot, nCol2Plot].plot(xf,
-                                            pd.rolling_mean(
-                                                abs(arrFRF[nDCEnd:nSamples/2]),
-                                            window=10), 
-                    lsColors[i])
+            xf = np.linspace(nLowFreq, nHighFreq, nSamples/2.0-nDCEnd)
+            axes[nRow2plot, nCol2Plot].plot(xf, 
+                                            pd.rolling_mean(arrFRF[nDCEnd:nSamples/2],
+                                            window=50, min_periods=1) )
     
             # setup looks
             axes[nRow2plot, nCol2Plot].set_xlabel(strDataName, 
@@ -298,7 +343,7 @@ def frfEx(lsData, lsDataName, dSamplingFreq,
             axes[nRow2plot, nCol2Plot].set_xticks(np.arange(0, 
                                                   int(dSamplingFreq/2.0)+1, 5.0) )
             
-            axes[nRow2plot, nCol2Plot].set_ylim(0.0, 2.5)
+#            axes[nRow2plot, nCol2Plot].set_ylim(0.0, 1.0)
             
             plt.setp(axes[nRow2plot, nCol2Plot].get_xticklabels(),
                      fontname=strBasicFontName, 
@@ -316,16 +361,9 @@ def frfEx(lsData, lsDataName, dSamplingFreq,
             nFFTStart = nFFTEnd
         
     plt.show()
-    
-    
 
 
-#%%
 if __name__ == '__main__':
-    import sys
-    sys.exit(0)
-    
-    #%% data sets & setup
     lsColumnNames = ['x0', 'y0','z0',
                      'gx0', 'gy0','gz0',
                      'x1', 'y1','z1',
@@ -335,52 +373,36 @@ if __name__ == '__main__':
     lsRGB = ['r', 'g', 'b']
     
     strBasicFontName = "Times new Roman"
-    
     nBasicFontSize = 16
     
-    #%% data to load
+    # data to load
     dSamplingFreq = 160.0
-    strWorkingDir = ("D:\\yanglin\\baidu_cloud\\research\\my_research\\resonance_lab\\"
-                     "data\\feasibility_v7\\")
+    strWorkingDir = "../../data/feasibility_v8/"
     
-    lsFileNames = ds.lsYL_t19 + ds.lsHCY_t1 + ds.lsWW_t3
-    
-    #%% statistics of time domain
-    lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
-    for i, strColName in enumerate(lsColumnNames[:3]):
-        dcStats = {}
-        for strFileName, dfAcc in zip(lsFileNames, lsData):
-            srAxisData = dfAcc[strColName]
-            dc = srAxisData.describe().to_dict()
-            nRange = dc['max'] - dc['min']
-            dc['range'] = nRange
-            dcStats[strFileName] = dc
-        dfStat = pd.DataFrame(dcStats)
-        ax0 = plt.figure().add_subplot(111)
-        dfStat.ix['range'].plot(ax=ax0, kind='bar', color=lsBasicColors[i])
-        plt.show()
+    import sys
+    sys.exit(0)
     
     #%% time domain
+    lsFileNames = ds.lsYL_t22_l1 + ds.lsYL_t23_l1
     lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
-    nAxesPerFig = len(lsFileNames)
-    lsColors = [c for c in lsBasicColors for _ in xrange(nAxesPerFig)]
-    lsColumn2Plot = ['x0', 'y0', 'z0']
-    plotByDataAxis(lsData, lsFileNames, lsColumn2Plot,
-                   nStartPoint=0, nEndPoint=-1, 
-                   nMaxRows=3, lsColors=lsColors)
+    
+    plotEx(lsData, lsFileNames, ['x0', 'y0', 'z0'], nMaxColumnPerSubplot=4)
                    
     #%% modulus
+    lsFileNames = ds.lsWW_t7_l1 + ds.lsWW_t8_l1
+                   
     lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
     
     lsColors = ['b']*len(lsData)
     lsColumn2Plot = ['x0', 'y0', 'z0']
     plotModolusEx(lsData, lsFileNames, lsColumn2Plot, dSamplingFreq,
-                nMaxRows=3, lsColors=lsColors, bPlotShapeLine=True)
+                nMaxRows=5, lsColors=lsColors, bPlotShapeLine=False)
                 
     lsColumn2Plot = ['x1', 'y1', 'z1']
     plotModolusEx(lsData, lsFileNames, lsColumn2Plot, dSamplingFreq,
-                nMaxRows=3, lsColors=lsColors, bPlotShapeLine=True)
+                nMaxRows=5, lsColors=lsColors, bPlotShapeLine=False)
     #%% fft for modulus
+    lsFileNames = ds.lsWW_t7_l1 + ds.lsWW_t8_l1
     lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
     
     lsColors = ['b']*len(lsData)
@@ -388,12 +410,21 @@ if __name__ == '__main__':
     lsFreqData = fftOnModulus(lsData, lsXYZColumns, dSamplingFreq, nDCEnd=50)
     
     lsMagnitudeData = []
+    lsRealPart = []
+    lsImagePart = []
     for dfFreqData in lsFreqData:
         dfMagnitude = dfFreqData.abs()
         lsMagnitudeData.append(dfMagnitude)
+        lsRealPart.append(dfFreqData.apply(np.real) )
+        lsImagePart.append(dfFreqData.apply(np.imag) )
 
     plotByDataAxis(lsMagnitudeData, lsFileNames, 
-                   lsAxis2Plot=['modulus', ], lsColors=lsColors)
+                   lsAxes2Plot=['modulus', ], lsColors=lsColors, nMaxRows=5)
+                   
+#    plotByDataAxis(lsRealPart, lsFileNames, 
+#                   lsAxes2Plot=['modulus', ], lsColors=lsColors)
+#    plotByDataAxis(lsImagePart, lsFileNames, 
+#                   lsAxes2Plot=['modulus', ], lsColors=lsColors)
         
     #%% visualize time + freq = specgram
     lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)

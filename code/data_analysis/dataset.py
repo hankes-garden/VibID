@@ -176,6 +176,18 @@ lsWW_t3_l1 = ["ww_t3_l1_25", "ww_t3_l1_25_1", "ww_t3_l1_25_2"]
 lsWW_t3_l10 = ["ww_t3_l10_25", "ww_t3_l10_25_1", "ww_t3_l10_25_2"]
 lsWW_t3 = lsWW_t3_l1 + lsWW_t3_l10
 
+lsWW_t4_l1 = ["ww_t4_l1_0", "ww_t4_l1_1", "ww_t4_l1_2"]
+lsWW_t4_l10 = ["ww_t4_l10_0", "ww_t4_l10_1", "ww_t4_l10_2"]
+lsWW_t4 = lsWW_t4_l1 + lsWW_t4_l10
+
+lsWW_t5_l1 = ["ww_t5_l1_0", "ww_t5_l1_1", "ww_t5_l1_2"]
+lsWW_t5_l10 = ["ww_t5_l10_0", "ww_t5_l10_1", "ww_t5_l10_2"]
+lsWW_t5 = lsWW_t5_l1 + lsWW_t5_l10
+
+lsWW_t6_l1 = ["ww_t6_l1_0", "ww_t6_l1_1", "ww_t6_l1_2"]
+lsWW_t6_l10 = ["ww_t6_l10_0", "ww_t6_l10_1", "ww_t6_l10_2"]
+lsWW_t6 = lsWW_t6_l1 + lsWW_t6_l10
+
 # HCY
 lsHCY_t1_l1 = ["hcy_t1_l1_25", "hcy_t1_l1_25_1", "hcy_t1_l1_25_2"]
 lsHCY_t1_l10 = ["hcy_t1_l10_25", "hcy_t1_l10_25_1", "hcy_t1_l10_25_2"]
@@ -188,3 +200,76 @@ lsHCY_t2 = lsHCY_t2_l1 + lsHCY_t2_l10
 lsHCY_t3_l1 = ["hcy_t3_l1_25", "hcy_t3_l1_25_1", "hcy_t3_l1_25_2"]
 lsHCY_t3_l10 = ["hcy_t3_l10_25", "hcy_t3_l10_25_1", "hcy_t3_l10_25_2"]
 lsHCY_t3 = lsHCY_t3_l1 + lsHCY_t3_l10
+
+#==============================================================================
+# data\experiment\user_identification\
+#==============================================================================
+lsCUP_t1_l1 = ["cup_t1_l1_0", "cup_t1_l1_1", "cup_t1_l1_2"]
+lsCUP_t1_l10 = ["cup_t1_l10_0", "cup_t1_l10_1", "cup_t1_l10_2"]
+lsCUP_t1 = lsCUP_t1_l1 + lsCUP_t1_l10
+
+lsYL_t22_l1 = ["yl_t22_l1_0", "yl_t22_l1_1", "yl_t22_l1_2"]
+lsYL_t23_l1 = ["yl_t23_l1_0", "yl_t23_l1_1", "yl_t23_l1_2", 
+               "yl_t23_l1_3", "yl_t23_l1_4"]
+lsYL_t24_l1 = ["yl_t24_l1_0", "yl_t24_l1_1", "yl_t24_l1_2", 
+               "yl_t24_l1_3", "yl_t24_l1_4"]
+
+lsWW_t7_l1 = ["ww_t7_l1_0", "ww_t7_l1_1", "ww_t7_l1_2", "ww_t7_l1_3", "ww_t7_l1_4"]
+lsWW_t8_l1 = ["ww_t8_l1_0", "ww_t8_l1_1", "ww_t8_l1_2", "ww_t8_l1_3", "ww_t8_l1_4"]
+
+lsQY_t3_l1 = ["qy_t3_l1_0", "qy_t3_l1_1", "qy_t3_l1_2", "qy_t3_l1_3", "qy_t3_l1_4"]
+lsQY_t4_l1 = ["qy_t4_l1_0", "qy_t4_l1_1", "qy_t4_l1_2", "qy_t4_l1_3", "qy_t4_l1_4"]
+
+lsCYJ_t14_l1 = ["cyj_t14_l1_0", "cyj_t14_l1_1", "cyj_t14_l1_2", 
+                "cyj_t14_l1_3", "cyj_t14_l1_4"]
+lsCYJ_t15_l1 = ["cyj_t15_l1_0", "cyj_t15_l1_1", "cyj_t15_l1_2", 
+                "cyj_t15_l1_3", "cyj_t15_l1_4"]
+                
+lsHCY_t4_l1 = ["hcy_t4_l1_0", "hcy_t4_l1_1", "hcy_t4_l1_2", 
+                "hcy_t4_l1_3", "hcy_t4_l1_4"]
+lsHCY_t5_l1 = ["hcy_t5_l1_0", "hcy_t5_l1_1", "hcy_t5_l1_2", 
+                "hcy_t5_l1_3", "hcy_t5_l1_4"]
+                
+lsHY_t1_l1 = ["hy_t1_l1_0", "hy_t1_l1_1", 
+              "hy_t1_l1_2", "hy_t1_l1_3", 
+              "hy_t1_l1_4", "hy_t1_l1_5"]
+lsHY_t2_l1 = ["hy_t2_l1_0", "hy_t2_l1_1", 
+              "hy_t2_l1_2", "hy_t2_l1_3", 
+              "hy_t2_l1_4"]
+                
+lsZY_t1_l1 = ["zy_t1_l1_0", "zy_t1_l1_1", "zy_t1_l1_2", 
+              "zy_t1_l1_3", "zy_t1_l1_4"]
+lsZY_t2_l1 = ["zy_t2_l1_0", "zy_t2_l1_1", "zy_t2_l1_2", 
+              "zy_t2_l1_3", "zy_t2_l1_4"]
+lsZY_t2_l10 = ["zy_t2_l10_0", "zy_t2_l10_1", "zy_t2_l10_2"]
+
+
+#==============================================================================
+# data\experiment\feasibility\position\
+#==============================================================================
+lsYL_t25_l2_p0 = ["yl_t25_l2_p0_0", "yl_t25_l2_p0_0", 
+                  "yl_t25_l2_p0_0"]
+lsYL_t25_l2_p1 = ["yl_t25_l2_p1_0", "yl_t25_l2_p1_0", 
+                  "yl_t25_l2_p1_0"]
+lsYL_t25_l2_p3 = ["yl_t25_l2_p3_0", "yl_t25_l2_p3_0", 
+                  "yl_t25_l2_p3_0"]
+
+lsYL_t26_l2_p0 = ["yl_t26_l2_p0_0"] # arm is not touching the desk
+
+lsTB_t1_l2_p0 = ["teabox_t1_l2_p0_0", "teabox_t1_l2_p0_1", 
+                 "teabox_t1_l2_p0_2"]
+lsTB_t1_l2_p2 = ["teabox_t1_l2_p2_0", "teabox_t1_l2_p2_1", 
+                 "teabox_t1_l2_p2_2"]
+lsTB_t1_l2_p3 = ["teabox_t1_l2_p3_0", "teabox_t1_l2_p3_1", 
+                 "teabox_t1_l2_p3_2"]
+
+# support with spring
+lsTB_t2_l2_p1 = ["teabox_t2_l2_p1_0", "teabox_t2_l2_p1_1", 
+                 "teabox_t2_l2_p1_2"]
+lsTB_t2_l2_p2 = ["teabox_t2_l2_p2_0", "teabox_t2_l2_p2_1", 
+                 "teabox_t2_l2_p2_2"] 
+lsTB_t2_l2_p3 = ["teabox_t2_l2_p3_0", "teabox_t2_l2_p3_1", 
+                 "teabox_t2_l2_p3_2"]
+                 
+# without touching desk
+lsCYJ_t16_l2_px = ["cyj_t16_l2_p0_0", "cyj_t16_l2_p1_0", "cyj_t16_l2_p3_0"]

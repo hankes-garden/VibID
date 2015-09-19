@@ -24,6 +24,7 @@ from sklearn import cross_validation
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 from sklearn.decomposition import FastICA
@@ -38,6 +39,7 @@ MODULUS = "modulus"
 MOVING_MEAN = "movingAvg"
 UPPER_ENVELOPE = "upper_envelope"
 LOWER_ENVELOPE = "lower_envelope"
+SEGMENT = "segment"
 
 # type of statistics
 BAND = "band"
@@ -55,9 +57,14 @@ CN_MODEL_ACCURACY = "accuracy"
 CN_MODEL_FEATURE_IMP = "feature_importance"
 
 def extractSignalStatistics(arrData, strDataName):
-    """extrac statistic info. from a time series"""
+    """extrac statistic info"""
     dcRet = {}
     dfStat = pd.Series(arrData).describe()
+    
+    # in case there are something wrong
+    dfStat.replace([np.inf, -np.inf], np.nan, inplace=True)
+    dfStat.fillna(0.0, inplace=True)
+
     dcRet["%s_%s" % (strDataName, MEAN)] = dfStat['mean']
     dcRet["%s_%s" % (strDataName, STD)] = dfStat['std']
     dcRet["%s_%s" % (strDataName, MIN)] = dfStat['min']
@@ -65,60 +72,82 @@ def extractSignalStatistics(arrData, strDataName):
     dcRet["%s_%s" % (strDataName, TWO_QUARTER)] = dfStat['50%']
     dcRet["%s_%s" % (strDataName, THREE_QUARTER)] = dfStat['75%']
     dcRet["%s_%s" % (strDataName, MAX)] = dfStat['max']
-    
+
     return dcRet
 
 def extractTemporalFeatures(dfModulus, strDataName, dSamplingFreq):
     """
         Extract temporal features from data
-        
+
         return
         -------
         dcRecord: a dict of features and label for one data
     """
     dcRecord = {}
-    
+
     # label
     dcRecord[CN_LABEL] = dcUserID[strDataName[:2] ]
 
-    # feature from modulus
-    dcRecord.update(extractSignalStatistics(dfModulus[CN_MODULUS].values, MODULUS) )
-    
+    # modulus
+    dcRecord.update(extractSignalStatistics(dfModulus[CN_MODULUS].values, 
+                                            MODULUS) )
+
+    # envelope of modulus
     arrUpperEnv, arrLowerEnv = sd.computeEnvelope(dfModulus[CN_MODULUS].values,
                                                   nWindow=dSamplingFreq/3)
-    dcRecord.update(extractSignalStatistics(arrUpperEnv, 
+    dcRecord.update(extractSignalStatistics(arrUpperEnv,
                                             "%s_%s"%(MODULUS, UPPER_ENVELOPE) ) )
-    dcRecord.update(extractSignalStatistics(arrLowerEnv, 
+    dcRecord.update(extractSignalStatistics(arrLowerEnv,
                                             "%s_%s"%(MODULUS, LOWER_ENVELOPE)) )
-    
-    arrMean = pd.rolling_mean(dfModulus[CN_MODULUS].values, window=dSamplingFreq)
-    dcRecord.update(extractSignalStatistics(arrMean, "%s_%s"%(MODULUS, MOVING_MEAN)) )
 
-    # statistics of each freq band
-    nBandWidth = 10
-    for nLow in xrange(5, int(dSamplingFreq/2.0)-5, 5):
-        nHigh = min(nLow + nBandWidth, int(dSamplingFreq/2.0)-1)
-        arrFiltered = bp_filter.butter_bandpass_filter(dfModulus[CN_MODULUS].values,
-                                                       nLow, nHigh,
-                                                       dSamplingFreq, order=9)
-        
-        dcRecord.update(extractSignalStatistics(arrFiltered, 
-                                                "%s%d%d"%(BAND, nLow, nHigh) ) )
-        # envelope
-        arrUpperEnv, arrLowerEnv = sd.computeEnvelope(arrFiltered,
-                                                      nWindow=30)
-        dcRecord.update(extractSignalStatistics(arrUpperEnv, 
-                        "%s%d%d_%s"%(BAND, nLow, nHigh, UPPER_ENVELOPE) ) )
-        dcRecord.update(extractSignalStatistics(arrLowerEnv,
-                        "%s%d%d_%s"%(BAND, nLow, nHigh, LOWER_ENVELOPE) ) )
-                        
-        arrMean = pd.rolling_mean(arrFiltered, window=dSamplingFreq)
-        dcRecord.update(extractSignalStatistics(arrMean,
-                        "%s%d%d_%s"%(BAND, nLow, nHigh, MOVING_MEAN) ) )
-                        
+    # moving average of modulus
+    arrMean = pd.rolling_mean(dfModulus[CN_MODULUS].values, 
+                              window=dSamplingFreq)
+    dcRecord.update(extractSignalStatistics(arrMean, 
+                                            "%s_%s"%(MODULUS, 
+                                                     MOVING_MEAN)) )
+    
+    # statistics for each segment                                        
+    arrSegmentIndex, arrVariationWidthStd, \
+        nLastIndex = sd.findSegment(dfModulus[CN_MODULUS].values, dSamplingFreq)
+    for i in xrange(len(arrSegmentIndex)-1 ):
+        arrSegment = dfModulus[CN_MODULUS].values[\
+                        arrSegmentIndex[i]: arrSegmentIndex[i+1] ]
+        arrUE, arrLE = sd.computeEnvelope(arrSegment, nWindow=dSamplingFreq/3)
+        dcRecord.update(extractSignalStatistics(arrUE, 
+                        "%s_%d_%s"%(SEGMENT, i, UPPER_ENVELOPE) ) )
+        dcRecord.update(extractSignalStatistics(arrUE,
+                        "%s_%d_%s"%(SEGMENT, i, LOWER_ENVELOPE) ) )
+
+#    # statistics of each freq band
+#    nBandWidth = 10
+#    for nLow in xrange(5, int(dSamplingFreq/2.0)-nBandWidth+1, 5):
+#        nHigh = min(nLow + nBandWidth, int(dSamplingFreq/2.0)-2)
+#        arrFiltered = bp_filter.butter_bandpass_filter( \
+#                          dfModulus[CN_MODULUS].values, 
+#                          nLow, nHigh, dSamplingFreq, order=7)
+#                                                       
+#        if(np.isnan(arrFiltered).all() ):
+#            raise ValueError("something is wrong for BP filter."
+#                             "Low:%d, High:%d" % (nLow, nHigh) )            
+#            
+#        dcRecord.update(extractSignalStatistics(arrFiltered,
+#                                                "%s%d%d"%(BAND, nLow, nHigh) ) )
+#        # envelope
+#        arrUpperEnv, arrLowerEnv = sd.computeEnvelope(arrFiltered,
+#                                                      nWindow=30)
+#        dcRecord.update(extractSignalStatistics(arrUpperEnv,
+#                        "%s%d%d_%s"%(BAND, nLow, nHigh, UPPER_ENVELOPE) ) )
+#        dcRecord.update(extractSignalStatistics(arrLowerEnv,
+#                        "%s%d%d_%s"%(BAND, nLow, nHigh, LOWER_ENVELOPE) ) )
+
+#        arrMean = pd.rolling_mean(arrFiltered, window=dSamplingFreq)
+#        dcRecord.update(extractSignalStatistics(arrMean,
+#                        "%s%d%d_%s"%(BAND, nLow, nHigh, MOVING_MEAN) ) )
+
     return dcRecord
-    
-    
+
+
 
 
 def computeFastICA(arrModulus, dSamplingFreq, dMinFreq, dcICAParams):
@@ -246,6 +275,12 @@ def classify(arrX, arrY, strModelName, dcModelParams, lsFeatureNames, nFold=10):
             else:
                 model = DecisionTreeClassifier()
 
+        elif (strModelName == 'extra_trees'):
+            if dcModelParams is not None:
+                model = ExtraTreesClassifier(**dcModelParams)
+            else:
+                model = ExtraTreesClassifier()
+                
         elif (strModelName == 'random_forest'):
             if dcModelParams is not None:
                 model = RandomForestClassifier(**dcModelParams)
@@ -280,74 +315,93 @@ def classify(arrX, arrY, strModelName, dcModelParams, lsFeatureNames, nFold=10):
 
         # evluate
         dAccuracy = accuracy_score(arrY_test, arrY_pred)
-        print dAccuracy
-        print arrY_pred
-        print arrY_test
+        
+        print "test=", arrY_test
+        print "pred=", arrY_pred
+        
+        print("acc: %.2f\n" % dAccuracy)
 
         dcCurrentFold[CN_MODEL_ACCURACY] = dAccuracy
-        dcFeatureImportance = { k:v for (k,v) in zip(lsFeatureColumns,
-                                 model.feature_importances_.tolist()) }
-        dcCurrentFold[CN_MODEL_FEATURE_IMP] = dcFeatureImportance
+        
+        if(strModelName != "SVM"):
+            dcFeatureImportance = { k:v for (k,v) in zip(lsFeatureColumns,
+                                     model.feature_importances_.tolist()) }
+            dcCurrentFold[CN_MODEL_FEATURE_IMP] = dcFeatureImportance
 
         dcResults[i] = dcCurrentFold
         i = i+1
 
     return dcResults
 
-
-# data sets & setup
-lsColumnNames = ['x0', 'y0','z0', 'gx0', 'gy0','gz0',
-                 'x1', 'y1','z1', 'gx1', 'gy1','gz1']
-
-lsBasicColors = ['r', 'g', 'b', 'c', 'm', 'y']
-lsRGB = ['r', 'g', 'b']
-
-lsMarkers = ['o', 'v', 'd', 's', '+', 'x',  '1', '2', '3', '4']
-
-strBasicFontName = "Times new Roman"
-
-nBasicFontSize = 16
-
-dSamplingFreq = 160.0
-strWorkingDir = "../../data/feasibility_v7/"
-
-# %%
 if __name__ == "__main__":
+    
+    # data sets & setup
+    lsColumnNames = ['x0', 'y0','z0', 'gx0', 'gy0','gz0',
+                     'x1', 'y1','z1', 'gx1', 'gy1','gz1']
+    
+    lsBasicColors = ['r', 'g', 'b', 'c', 'm', 'y']
+    lsRGB = ['r', 'g', 'b']
+    
+    lsMarkers = ['o', 'v', 'd', 's', '+', 'x',  '1', '2', '3', '4']
+    
+    strBasicFontName = "Times new Roman"
+    
+    nBasicFontSize = 16
+    
+    dSamplingFreq = 160.0
+
     import sys
     sys.exit(0)
 
-
-
-#==============================================================================
-#     Time domain
-#==============================================================================
-     #%% X, Y, Z axes
-    lsFileNames = ds.lsYL_t19 + ds.lsYL_t20 + ds.lsYL_t21 + \
-                  ds.lsCYJ_t11 + ds.lsCYJ_t11 + ds.lsCYJ_t11
+#%% plot X, Y, Z
+#    strWorkingDir = "../../data/experiment/user_identification/"
+#    lsFileNames = ds.lsYL_t22_l1 + ds.lsYL_t23_l1
+#    lsFileNames = ds.lsQY_t3_l1 + ds.lsQY_t4_l1
+#    lsFileNames = ds.lsWW_t7_l1 + ds.lsWW_t8_l1
+#    lsFileNames = ds.lsCYJ_t14_l1 + ds.lsCYJ_t15_l1
+#    lsFileNames = ds.lsHCY_t4_l1 + ds.lsHCY_t5_l1
+#    lsFileNames = ds.lsHY_t1_l1 + ds.lsHY_t2_l1
+#    lsFileNames = ds.lsZY_t1_l1 + ds.lsZY_t2_l1 + ds.lsZY_t2_l10
+    
+    strWorkingDir = "../../data/experiment/feasibility/position/"
+    lsFileNames = ds.lsYL_t25_l2_p0 + ds.lsYL_t25_l2_p1 + ds.lsYL_t25_l2_p3
+                 
     lsData = md.loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
-    nAxesPerFig = len(lsFileNames)
-    lsColors = [c for c in lsBasicColors for _ in xrange(nAxesPerFig)]
     lsColumn2Plot = ['x0', 'y0', 'z0']
-    md.plotByDataAxis(lsData, lsFileNames, lsColumn2Plot,
-                   nStartPoint=0, nEndPoint=-1,
-                   nMaxRows=3, lsColors=lsColors)
+    md.plotEx(lsData, lsFileNames, lsColumn2Plot, nMaxColumnPerSubplot=5)
 
 #%% compute modulus
-    lsFileNames = ds.lsYL_t19[2:5] + ds.lsCYJ_t11[2:5] + ds.lsHCY_t1[2:5] + ds.lsWW_t3[2:5]
+#    strWorkingDir = "../../data/experiment/user_identification/"
+#    lsFileNames = ds.lsYL_t22_l1 + ds.lsYL_t23_l1 + ds.lsYL_t24_l1
+#    lsFileNames = ds.lsQY_t3_l1 + ds.lsQY_t4_l1
+#    lsFileNames = ds.lsWW_t7_l1 + ds.lsWW_t8_l1
+#    lsFileNames = ds.lsCYJ_t14_l1 + ds.lsCYJ_t15_l1
+#    lsFileNames = ds.lsHCY_t4_l1 + ds.lsHCY_t5_l1
+#    lsFileNames = ds.lsHY_t1_l1 + ds.lsHY_t2_l1
+#    lsFileNames = ds.lsZY_t1_l1 + ds.lsZY_t2_l1 + ds.lsZY_t2_l10
+    
+    strWorkingDir = "../../data/experiment/feasibility/position/"
+#    lsFileNames = ds.lsYL_t25_l2_p0 + ds.lsYL_t25_l2_p1 + ds.lsYL_t25_l2_p3
+#    lsFileNames = ds.lsYL_t26_l2_p0
+#    lsFileNames = ds.lsTB_t2_l2_p1 + ds.lsTB_t2_l2_p2 + ds.lsTB_t2_l2_p3
+    lsFileNames = ds.lsCYJ_t16_l2_px
+                  
     lsData = md.loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
 
     lsXYZColumns = ['x0', 'y0', 'z0']
     lsModulus = md.computeModulusEx(lsData, lsXYZColumns)
 
-#%% plot modulus
+
     lsColumn2Plot = ['x0', 'y0', 'z0']
-    md.plotModolusEx(lsData, lsFileNames, lsColumn2Plot, 
-                   dSamplingFreq, bPlotShapeLine=True)
+    md.plotModolusEx(lsData, lsFileNames,
+                     lsColumn2Plot, dSamplingFreq, nMaxRows=3,
+                     bPlotModulus=True, bPlotShapeLine=False,
+                     bPlotFeatureLines=False, nYMax=1500)
 
 #%% bandpass on modulus
     lsColors = md.getColorList(20, "gist_earth")
 
-    for strDataName, dfModulus in zip(lsFileNames, lsModulus)[:2]:
+    for strDataName, dfModulus in zip(lsFileNames, lsModulus)[5:7]:
         nBandWidth = 10
         nMaxRows = 4
         lsLowCuts = range(5, int(dSamplingFreq/2.0)-5, 5)
@@ -360,17 +414,17 @@ if __name__ == "__main__":
             # bp filter
             arrFiltered= bp_filter.butter_bandpass_filter(dfModulus[CN_MODULUS].values,
                                                           nLowCut, nHighCut,
-                                                          dSamplingFreq, order=9)
+                                                          dSamplingFreq, order=7)
 
             #visualize
             nRow2plot = i % nMaxRows
             nCol2Plot = i / nMaxRows
             axes[nRow2plot, nCol2Plot].plot(arrFiltered, color = lsColors[i])
             arrUpperEnv, arrLowerEnv = sd.computeEnvelope(arrFiltered, nWindow=30)
-            axes[nRow2plot, nCol2Plot].plot(arrUpperEnv, 'r-', lw=2, alpha=0.6)
-            axes[nRow2plot, nCol2Plot].plot(arrLowerEnv, 'r-', lw=2, alpha=0.6)
+            axes[nRow2plot, nCol2Plot].plot(arrUpperEnv, 'r-', lw=1, alpha=0.6)
+            axes[nRow2plot, nCol2Plot].plot(arrLowerEnv, 'm-', lw=1, alpha=0.6)
             axes[nRow2plot, nCol2Plot].plot(pd.rolling_mean(arrFiltered, window=100),
-                                            'r-', lw=2, alpha=0.6)
+                                            'k-', lw=1, alpha=0.6)
             axes[nRow2plot, nCol2Plot].set_xlabel( "%d ~ %d Hz" % (nLowCut, nHighCut) )
 
         fig.suptitle(strDataName, fontname=strBasicFontName,
@@ -378,62 +432,37 @@ if __name__ == "__main__":
         fig.tight_layout()
     plt.show()
 
-
-##%%  DTW
-#    lsFileNames = ds.lsZLW_l1[:3]
-#    lsData = md.loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
-#
-#    lsXYZColumns = ['x0', 'y0', 'z0']
-#    lsModulus = md.computeModulusEx(lsData, lsXYZColumns)
-#    # compute pairwise DTW
-#    dcDTWDetails, dcDistance = pairwiseFastDTW(lsModulus, lsFileNames)
-#    dfDistanceMatrix = pd.DataFrame(dcDistance)
-#
-##%% MDS
-#    mds = manifold.MDS(n_components=3, dissimilarity="precomputed",
-#                       random_state=7)
-#    results = mds.fit(dfDistanceMatrix.as_matrix() )
-#
-#    coords = results.embedding_
-#
-#    fig = plt.figure()
-#    ax = fig.add_subplot(111, projection='3d')
-#    lsUserNames = ["ZLW", "YL"]
-#    lsUserDataCount = [18, 15]
-#    for i, nUserDataCount in enumerate(lsUserDataCount):
-#        nUserIndexBegin = sum(lsUserDataCount[:i])
-#        nUserIndexEnd = sum(lsUserDataCount[:i+1])
-#        ax.scatter(coords[nUserIndexBegin:nUserIndexEnd, 0],
-#                   coords[nUserIndexBegin:nUserIndexEnd, 1],
-#                   coords[nUserIndexBegin:nUserIndexEnd, 2],
-#                   s=150,
-#                   c=lsBasicColors[i],
-#                   marker=lsMarkers[i],
-#                   label=lsUserNames[i])
-#    plt.legend()
-#    plt.tight_layout()
-#    plt.show()
-
 #%%  feature extraction
-    lsFileNames = ds.lsYL_t19 + ds.lsYL_t20 + ds.lsYL_t21 + \
-                  ds.lsCYJ_t11 + ds.lsCYJ_t11 + ds.lsCYJ_t11 + \
-                  ds.lsHCY_t1 + ds.lsHCY_t2 + ds.lsHCY_t3 + \
-                  ds.lsWW_t3
-
-    dcUserID = {"yl":1, "cy":2, "hc":3, "ww":4}
+    strWorkingDir = "../../data/experiment/user_identification/"
+    lsFileNames = ds.lsYL_t22_l1 + ds.lsYL_t23_l1 + ds.lsYL_t24_l1 + \
+                  ds.lsWW_t7_l1 + ds.lsWW_t8_l1 + \
+                  ds.lsQY_t3_l1 + ds.lsQY_t4_l1 + \
+                  ds.lsCYJ_t14_l1 + ds.lsCYJ_t15_l1 + \
+                  ds.lsHCY_t4_l1 + ds.lsHCY_t5_l1 + \
+                  ds.lsHY_t1_l1 + ds.lsHY_t2_l1 + \
+                  ds.lsZY_t1_l1 + ds.lsZY_t2_l1
+                  
+#    strWorkingDir = "../../data/feasibility_v7/"
+#    lsFileNames = ds.lsYL_t19_l1 + ds.lsYL_t20_l1 + ds.lsYL_t21_l1 + \
+#                  ds.lsCYJ_t11_l1 + ds.lsCYJ_t11_l1 + ds.lsCYJ_t11_l1 + \
+#                  ds.lsWW_t4_l1 + ds.lsWW_t5_l1 + ds.lsWW_t6_l1
+                  
+    dcUserID = {"yl":1, "cy":2, "hc":3, "ww":4, "qy":5, "hy":6, "zy":7}
     lsData = md.loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
 
     lsXYZColumns = ['x0', 'y0', 'z0']
     lsModulus = md.computeModulusEx(lsData, lsXYZColumns)
 
     lsFeatureLabel = []
+    print("extracting features...")
     for strDataName, dfModulus in zip(lsFileNames, lsModulus):
-        dcRecord = extractTemporalFeatures(dfModulus, strDataName, dSamplingFreq)
+        dcRecord = extractTemporalFeatures(dfModulus, strDataName,
+                                           dSamplingFreq)
         lsFeatureLabel.append(dcRecord)
 
     dfFeatureLabel = pd.DataFrame(lsFeatureLabel)
 
-#%% classification
+#%% classify
     # prepare train & testing set
     lsFeatureColumns = [ col for col in dfFeatureLabel.columns if col != CN_LABEL]
     strLabelColumn = CN_LABEL
@@ -441,33 +470,45 @@ if __name__ == "__main__":
     arrY = dfFeatureLabel[strLabelColumn].values
 
     # model setup
-    strModelName = 'GBRT'
-    modelParams = {'n_estimators':100, 'max_features':0.5}
+#    strModelName = 'GBRT'
+#    modelParams = {'n_estimators':500, 'max_features':"auto"}
+    
+#    strModelName = 'extra_trees'
+#    modelParams = {'n_estimators':500, "criterion":"gini", 
+#                   "max_features": "auto", "oob_score":True, 
+#                   "n_jobs": -1, "warm_start": False, 
+#                   "random_state": 7}
 
-#    strModelName = 'random_forest'
-#    modelParams = {'n_estimators':50}
+    strModelName = 'random_forest'
+    modelParams = {'n_estimators':500, "criterion":"gini", 
+                   "max_features": "auto", "oob_score":True, 
+                   "n_jobs": -1, "warm_start": False, 
+                   "random_state": 7}
 
 #    strModelName = 'decision_tree'
-#    modelParams = {"max_features": 0.8, "criterion": "entropy"}
+#    modelParams = {"criterion": "gini", "splitter": "random",
+#                   "max_features": 0.5, }
 
 #    strModelName = 'SVM'
 #    modelParams = None
 
-    dcResults = classify(mtX, arrY, strModelName, modelParams, lsFeatureColumns, nFold=5)
+    print("training & testing...")
+    dcResults = classify(mtX, arrY, strModelName, modelParams,
+                         lsFeatureColumns, nFold=5)
 
-    # feature importance
-    for nFold, dcFoldResult in dcResults.iteritems():
-        print("Fold %d:" % (nFold) )
-        lsFeatureImp = sorted(dcFoldResult[CN_MODEL_FEATURE_IMP].items(),
-                              key=operator.itemgetter(1), reverse=True )
-        for strFeature, dImp in lsFeatureImp[:10]:
-            print("%s: %.2f" % (strFeature, dImp) )
-
-        print("--")
-        print("Accuracy: %.2f" % (dcFoldResult[CN_MODEL_ACCURACY]) )
-        print ("Sum: %.2f" % \
-               sum(dcFoldResult[CN_MODEL_FEATURE_IMP].values() ) )
-        print("****\n")
+#    # feature importance
+#    for nFold, dcFoldResult in dcResults.iteritems():
+#        print("Fold %d:" % (nFold) )
+#        lsFeatureImp = sorted(dcFoldResult[CN_MODEL_FEATURE_IMP].items(),
+#                              key=operator.itemgetter(1), reverse=True )
+#        for strFeature, dImp in lsFeatureImp[:20]:
+#            print("%s: %.2f" % (strFeature, dImp) )
+#
+#        print("--")
+#        print("Accuracy: %.2f" % (dcFoldResult[CN_MODEL_ACCURACY]) )
+#        print ("Sum: %.2f" % \
+#               sum(dcFoldResult[CN_MODEL_FEATURE_IMP].values() ) )
+#        print("****\n")
 
     # overall performance
     lsAccuracy = [ i[CN_MODEL_ACCURACY] for i in dcResults.values()]
