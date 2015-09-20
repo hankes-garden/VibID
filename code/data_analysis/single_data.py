@@ -143,7 +143,7 @@ if __name__ == '__main__':
 
     strWorkingDir = "../../data/experiment/feasibility/position/"
 
-    strFileName = "yl_t25_l2_p0_0"
+    strFileName = "teabox_t2_l2_p1_1"
 
     lsColumnNames = ['x0', 'y0','z0', 'gx0', 'gy0','gz0',
                      'x1', 'y1','z1', 'gx1', 'gy1','gz1']
@@ -159,16 +159,16 @@ if __name__ == '__main__':
     sys.exit(0)
 
     #%%  visualize time-domain
-    lsAxis2Inspect = ['x0', 'y0', 'z0', 'x1', 'y1', 'z1']
+    lsAxis2Inspect = ['x1', 'y1', 'z1']
     lsColors = lsRGB*6
 
-    nPlotStartPoint = 0
-    nPlotEndPoint = -1
+    nFFTBatchStart = 0
+    nFFTBatchEnd = -1
     nRows= 3
     nCols = int(math.ceil(len(lsAxis2Inspect)/nRows))
     fig, axes = plt.subplots(nrows=nRows, ncols=nCols, squeeze=False)
     for i, col in enumerate(lsAxis2Inspect):
-        dfData[col].iloc[nPlotStartPoint:nPlotEndPoint].plot(color=lsColors[i],
+        dfData[col].iloc[nFFTBatchStart:nFFTBatchEnd].plot(color=lsColors[i],
                     ax=axes[i%nRows, int(math.ceil(i/nRows))],
                     legend=False)
 
@@ -182,8 +182,8 @@ if __name__ == '__main__':
     lsAxis2Inspect = ['x0', 'y0', 'z0', 'x1', 'y1', 'z1']
     lsColors = lsRGB*2
 
-    nPlotStartPoint = 0
-    nPlotEndPoint = -1
+    nFFTBatchStart = 0
+    nFFTBatchEnd = -1
     
 
     dfData_filtered = dfData[lsAxis2Inspect]
@@ -244,62 +244,65 @@ if __name__ == '__main__':
     plt.tight_layout()
     plt.show()
 
-    #%% plot freq domain
-    lsAxis2Inspect = ['x0', 'y0', 'z0']
-    lsColors = lsRGB*2
+    #%% fft & plot
+    lsAxis2Inspect = ['x1', 'y1', 'z1']
+    lsColors = lsRGB * int(math.ceil(len(lsAxis2Inspect)/3.0 ))
 
-    nPlotStartPoint = 0
-    nPlotEndPoint = -1
-    nRows= len(lsAxis2Inspect)
-    nCols = 1
-    fig, axes = plt.subplots(nrows=nRows, ncols=nCols, squeeze=False)
-
-    nDCEnd = 200
-    dfData_filtered = dfData[lsAxis2Inspect]
-    for i in xrange(len(dfData_filtered.columns) ):
-        srAxis = dfData_filtered.iloc[:, i]
+    
+    nDCEnd = 10
+    dfData2FFT = dfData[lsAxis2Inspect]
+    fig, axes = plt.subplots(nrows=len(lsAxis2Inspect), 
+                             ncols=1, squeeze=False)
+    for i, strCol in enumerate(dfData2FFT.columns):
+        srAxis = dfData2FFT.ix[:, strCol]
+        
         # bp filter
-        arrFiltered = bp_filter.butter_bandpass_filter(srAxis.values, 10, 75,
+        arrFiltered = bp_filter.butter_bandpass_filter(srAxis.values, 5,
+                                                       dSamplingFreq/2.0-5,
                                                        dSamplingFreq, order=9)
 
         # fft
         nSamples = len(arrFiltered)
-        arrFreq = fftpack.fft(arrModulus)[nDCEnd:nSamples/2]
+        arrFreq = fftpack.fft(arrFiltered)
         arrNormalizedPower = abs(arrFreq)/(nSamples*1.0)
 
         dResolution = dSamplingFreq*1.0/nSamples
-        arrFreqIndex = np.linspace(nDCEnd*dResolution, dSamplingFreq/2.0, nSamples/2-nDCEnd)
-        axes[i, 0].plot(arrFreqIndex, arrNormalizedPower)
+        arrFreqIndex = np.linspace(nDCEnd*dResolution, 
+                                   dSamplingFreq/2.0, nSamples/2-nDCEnd)
+        axes[i, 0].plot(arrFreqIndex, 
+                        arrNormalizedPower[nDCEnd:nSamples/2],
+                        color=lsColors[i])
+        axes[i, 0].set_xticks(range(0, int(dSamplingFreq/2), 2) )
         axes[i, 0].set_xlabel(lsAxis2Inspect[i] )
 
-    fig.suptitle(strFileName + ": modulus",
+    fig.suptitle(strFileName + "@Freq. domain",
                  fontname=strBasicFontName,
                  fontsize=nBasicFontSize)
     plt.tight_layout()
     plt.show()
 
-#    #%%  visualize specgram
-#
-#    lsAxis2Inspect = ['x0', 'y0', 'z0', 'x1', 'y1', 'z1']
-#    lsColors = lsRGB*2
-#
-#    nPlotStartPoint = 0
-#    nPlotEndPoint = -1
-#    nRows= 3
-#    nCols = int(math.ceil(len(lsAxis2Inspect)/nRows))
-#    fig, axes = plt.subplots(nrows=nRows, ncols=nCols, squeeze=False)
-#    for i, col in enumerate(lsAxis2Inspect):
-#        Pxx, freqs, bins, im = axes[i%nRows, int(math.ceil(i/nRows))].specgram(
-#                                dfData[col].iloc[nPlotStartPoint:nPlotEndPoint].values,
-#                                NFFT=int(dSamplingFreq),
-#                                Fs=dSamplingFreq,
-#                                noverlap=int(dSamplingFreq/2.0) )
-#        axes[i%nRows, int(math.ceil(i/nRows))].set_xlabel(col)
-#    fig.suptitle(strFileName + "@ specgram",
-#                 fontname=strBasicFontName,
-#                 fontsize=nBasicFontSize)
-#    plt.tight_layout()
-#    plt.show()
+    #%%  visualize specgram
+    lsAxis2Inspect = ['x1', 'y1', 'z1']
+    lsColors = lsRGB * int(math.ceil(len(lsAxis2Inspect)/3.0 ))
+
+    nFFTBatchStart = 0
+    nFFTBatchEnd = -1
+    fig, axes = plt.subplots(nrows=len(lsAxis2Inspect), 
+                             ncols=1, squeeze=False)
+    for i, col in enumerate(lsAxis2Inspect):
+        srData2Analyse = dfData.ix[:, col]
+        Pxx, freqs, bins, im = axes[i, 0].specgram(
+            srData2Analyse.iloc[nFFTBatchStart:nFFTBatchEnd].values,
+            mode='psd',
+            NFFT=int(dSamplingFreq*1),
+            Fs=dSamplingFreq,
+            noverlap=int(dSamplingFreq/4.0) )
+        axes[i, 0].set_xlabel(col)
+    fig.suptitle(strFileName + "@ specgram",
+                 fontname=strBasicFontName,
+                 fontsize=nBasicFontSize)
+    plt.tight_layout()
+    plt.show()
 
     # %%
     #==============================================================================
