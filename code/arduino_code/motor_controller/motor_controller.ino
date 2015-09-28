@@ -1,13 +1,14 @@
 #include <stdio.h>
 
 const int ANALOG_OUT_PIN = 3;			// the PWM PIN
-const int VOLTAGE_STEP = 10;			// the voltage to increase each time
-const int VIBRATION_DURATION = 1500; 	// the duration of each vibration segment
-const int INTERVAL_DURATION = 1500; 	// static duration btw vibration segments
-const int RESET_DURATION = 3000;    	// the time interval btw trials
+const int VIBRATION_DURATION = 1400; 	// the duration of each vibration segment
+const int INTERVAL_DURATION = 0; 		// static duration btw vibration segments
+const int RESET_DURATION = 1000;		// the time interval btw trials
 const int SERIAL_BAUD_RATE = 9600;		// baud rate of serial
-const int MAX_VOLTAGE = 100;			// max voltage
-const int STARTING_VOLTAGE = 30;		// the starting voltage of voltage sweeping
+const int SAFE_VOLTAGE = 150;			// max voltage
+const int VOLTAGE_STEP = 10;				// the voltage to increase each time
+const int SWEEP_STARTING_VOLTAGE = 30;	// the starting voltage of voltage sweeping
+const int SWEEP_END_VOLTAGE = 150;       // the end voltage of voltage sweeping
 
 bool g_bSweep = false;						// indicator of sweeping state
 int g_nCurrentVoltage = 0;					// current voltage
@@ -26,37 +27,37 @@ void loop()
   // response to user input
   if (Serial.available() > 0) 
   {
-    int nInput = Serial.parseInt();
+    int nCmd = Serial.parseInt();
 
-    if (nInput == 0) // 0: stop testing
+    if (nCmd == 0) // 0: stop testing
     {
       setVibration(0);
 	  clearState();
 	  
 	  Serial.println("Test is stopped.");
     }
-    else if (nInput > 0) // vibrate as user input for a single segment
+    else if (nCmd > 0) // vibrate as user input for a single segment
     {
 	  if(g_bSweep == true)
 	  {
-		  Serial.println("Invalid input: the sweeping test is running, stop it first!")
-		  continue;
+		  Serial.println("Invalid input: the sweeping test is running, stop it first!");
+		  return;
 	  }
 	  
-	  sprintf(g_arrStrFormatBuffer, "Start single vibration, voltage:%d.", nInput)
+	  sprintf(g_arrStrFormatBuffer, "Start single vibration, voltage:%d.", nCmd);
       Serial.println(g_arrStrFormatBuffer);
 
       // vibrate
 	  delay(INTERVAL_DURATION);
-      setVibration(nInput);
+      setVibration(nCmd);
       delay(VIBRATION_DURATION);
       setVibration(0);
     }
-    else // < 0, sweep for nInput times
+    else // < 0, sweep for nCmd times
     {
-	  g_nTrailNum = -1 * (nInput);
+	  g_nTrailNum = -1 * (nCmd);
 	  g_nTrialCount = 0;
-      g_nCurrentVoltage = STARTING_VOLTAGE;
+      g_nCurrentVoltage = SWEEP_STARTING_VOLTAGE;
       g_bSweep = true;
       sprintf(g_arrStrFormatBuffer, "Start %d trials...", g_nTrailNum);
 	  Serial.println(g_arrStrFormatBuffer);
@@ -76,27 +77,29 @@ void loop()
 		Serial.println("All trials are finished.");
 	}
 	  
-    if (g_nCurrentVoltage <= MAX_VOLTAGE)
+    if (g_nCurrentVoltage <= SWEEP_END_VOLTAGE)
     {
 		// vibrate
 		setVibration(g_nCurrentVoltage);
 		delay(VIBRATION_DURATION);
 
-		// stop for a while
-		setVibration(0);
-		delay(INTERVAL_DURATION);
+		// // stop for a while
+		// setVibration(0);
+		// delay(INTERVAL_DURATION);
 
 		g_nCurrentVoltage += VOLTAGE_STEP;
     }
     else
     {
 		sprintf(g_arrStrFormatBuffer, "-->Trial #%d is finished.", g_nTrialCount);
-		serial.println(g_arrStrFormatBuffer);
+		Serial.println(g_arrStrFormatBuffer);
 		++g_nTrialCount;
 		
 		// stay static for a while
+		setVibration(0);
 		delay(RESET_DURATION);
-		g_nCurrentVoltage = STARTING_VOLTAGE;
+		
+		g_nCurrentVoltage = SWEEP_STARTING_VOLTAGE;
     }
   }
 }
@@ -106,7 +109,7 @@ void loop()
  */
 void setVibration(int nIntensity)
 {
-  int nVol = min(nIntensity, MAX_VOLTAGE);
+  int nVol = min(nIntensity, SAFE_VOLTAGE);
   analogWrite(ANALOG_OUT_PIN,  nVol);
 
   sprintf(g_arrStrFormatBuffer, "current intensity: %d.", nVol);
@@ -121,6 +124,4 @@ void clearState()
 	g_nCurrentVoltage = 0;
 	g_nTrialCount = 0;
 	g_bSweep = false;
-	
-	Serial.println("All trails are finished.");	
 }

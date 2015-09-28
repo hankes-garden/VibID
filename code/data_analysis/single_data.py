@@ -12,41 +12,159 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import bp_filter
 import math
-import dataset as ds
 
 lsRGB = ['r', 'g', 'b']
 lsCMYK = ['c', 'm', 'y']
 
-def computeEnvelope(arrData, nWindow, nMinPeriods=1):
+def computeEnvelope(arrData, nWindow, nMinPeriods=None):
     """compute upper and lower envelope for given data"""
     arrUpperEnvelope = pd.rolling_max(pd.Series(arrData), window=nWindow,
-                                      min_periods=nMinPeriods)
+                                      min_periods=nMinPeriods, center=True)
     arrLowerEnvelope = pd.rolling_min(pd.Series(arrData), window=nWindow,
-                                     min_periods=nMinPeriods)
+                                     min_periods=nMinPeriods, center=True)
     return arrUpperEnvelope, arrLowerEnvelope
     
-def findSegment(arrData, dSamplingFreq, nWindow=10, dThreshold=50.0):
+def findReponseEndIndex(arrData, dSamplingFreq, nResponses, 
+                        nSearchStartIndex = 100,
+                        nDiscoutinousDistance = 100):
     """
-        Find the segments of a signal via the std of 
-        width of temporal variation
+        This function uses the std of data's variation range to
+        determine the end indeces of responses.
+        
+        Parameters:
+        ----
+        arrValue: the data
+        dSamplingRate: sampling rate of data
+        nResponses: number of responses
+        nSearchStartIndex: the start index of response searching
+        nDiscoutinousDistance: number of points btw two humps
+        
+        Returns:
+        ----
+        lsResponseEndIndex: a list of end index of responses
+        arrBandwidthSTD: the reference data to find responses
     """
-    arrUpperEnvelope, arrLowerEnvelope = computeEnvelope(arrData, nWindow)
+    nWindowSize = 10
+    arrUpperEnvelope, \
+    arrLowerEnvelope = computeEnvelope(arrData, nWindowSize)
     arrBandWidth = arrUpperEnvelope - arrLowerEnvelope
-    arrVariationWidthStd = pd.rolling_std(pd.Series(arrBandWidth), nWindow )
-    nLastIndex = np.where(arrVariationWidthStd>=dThreshold)[0][-1]
-    lsSegments = []
+    arrBandwidthSTD = pd.rolling_std(pd.Series(arrBandWidth), 
+                                     nWindowSize, center=True)
     
-    nEndIndex = nLastIndex
-    nStartIndex = nLastIndex
-    while(True):
-        nStartIndex = int(nEndIndex-dSamplingFreq*7.2 ) 
-        if(nStartIndex <= 0):
-            break
-        lsSegments.append(nStartIndex)
-        nEndIndex = int(nStartIndex - dSamplingFreq*3.1)
+    lsPeaks = []
     
-    lsSegments.reverse()
-    return np.array(lsSegments)[-13:], arrVariationWidthStd, nLastIndex
+    # compute the minimal valume of peak candidates
+    dMinPeakValume = 0.10 * (np.max(arrData[int(3*dSamplingFreq):-1]) \
+                    - np.min(arrData[int(3*dSamplingFreq):-1]) )  
+                    
+                    
+    # select points whose value is larger than dMinPeakValume
+    arrRespEndIndexCandidates = np.where(arrBandwidthSTD >= dMinPeakValume)[0]
+    
+    # only need points indexed after nSearchStartIndex
+    arrRespEndIndexCandidates = \
+        arrRespEndIndexCandidates[arrRespEndIndexCandidates>=nSearchStartIndex]
+    
+    # find discontinuous humps
+    nHumpStart = 0
+    nHumpEnd = nHumpStart+1
+    while(nHumpEnd < len(arrRespEndIndexCandidates) ):
+        if ( (arrRespEndIndexCandidates[nHumpEnd]- \
+              arrRespEndIndexCandidates[nHumpEnd-1]) \
+             < nDiscoutinousDistance ):
+            nHumpEnd += 1 
+        else:
+            # note that for numpy.array, the index is 
+            # not changed after slicing
+            arrHumpIndexRange = arrRespEndIndexCandidates[nHumpStart:nHumpEnd]
+            arrHumpValues = arrBandwidthSTD[arrHumpIndexRange] 
+            # let the peak point represents this hump
+            nPeakIndex = np.argmax(arrHumpValues)
+            lsPeaks.append( (nPeakIndex, arrHumpValues[nPeakIndex]) )
+            
+            nHumpStart = nHumpEnd
+            nHumpEnd = nHumpStart+1
+     
+
+    if (nHumpEnd > (nHumpStart+1) ): # last subsegment is not count yet
+        # note that for numpy.array, the index does 
+        # not change after slicing
+        arrHumpIndexRange = arrRespEndIndexCandidates[nHumpStart:nHumpEnd]
+        arrHumpValues = arrBandwidthSTD[arrHumpIndexRange] 
+        # let the peak point represents this hump
+        nPeakIndex = np.argmax(arrHumpValues)
+        lsPeaks.append((nPeakIndex, arrHumpValues[nPeakIndex]) )
+    
+    # find the minimal value for top K humps
+    lsSortedPeaks = sorted(lsPeaks, key=lambda x: x[1], reverse=True)
+    dTopPeakThreshold = lsSortedPeaks[nResponses-1][1] 
+    
+    # find top k peaks --> their index is the end index of response
+    lsResponseEndIndex = [peak[0] for peak in lsPeaks \
+                          if peak[1] >= dTopPeakThreshold]
+     
+    
+    return lsResponseEndIndex, arrBandwidthSTD
+            
+            
+    
+def splitData(arrData, dSamplingFreq, nResponses, 
+              nSegmentsPerRespsonse = 5, 
+              dVibrationDuration = 1.4, 
+              dIntervalDuration = 0.0, 
+              dRestDuration = 1.0):
+    """
+        Split data into responses and then find segments in 
+        each response.
+        
+        Parameters:
+        ----
+        arrData: the data
+        dSamplingFreq: sampling frequency of data
+        nResponses: number of responses in this data
+        nSegmentPerResponse: number of segement per response
+        dVibrationDuration: duration of each vibration in seconds
+        dIntervalDuration: static duration btw vibrations in seconds
+        dRestDuration: rest duration btw responses in seconds
+        
+        Returns:
+        ----
+        lsResponses: list of segment lists, each of which represent an response
+        arrResponseEndIndex: the ending index of each responses
+        arrBandwidthSTD: the std of data variation range 
+    """
+    # find the end of response via the std of variation
+    arrResponseEndIndex, \
+    arrBandwidthSTD = findReponseEndIndex(arrData,
+                                          dSamplingFreq,
+                                          nResponses,
+                                          int(2*dSamplingFreq),
+                                          int(1*dSamplingFreq) )
+                                       
+    lsResponses = []
+    for nRespEndIndex in arrResponseEndIndex:
+        if ( (nRespEndIndex- \
+              nSegmentsPerRespsonse*(dVibrationDuration+dIntervalDuration) \
+              *dSamplingFreq ) \
+            < 0.0 ): 
+            raise ValueError("Invalid end index of response.")
+            
+        
+        lsSegments = []
+        nSegmentEnd = nRespEndIndex
+        nSegmentStart = nRespEndIndex
+        nCount = 0
+        while(nCount < nSegmentsPerRespsonse):
+            nSegmentStart = int(nSegmentEnd - dSamplingFreq*dVibrationDuration ) 
+            lsSegments.append( (nSegmentStart, nSegmentEnd) )
+            nCount += 1
+            
+            nSegmentEnd = int(nSegmentStart - dSamplingFreq*dIntervalDuration)
+            
+        lsSegments.reverse()
+        lsResponses.append(lsSegments)
+        
+    return lsResponses, arrResponseEndIndex, arrBandwidthSTD
     
 
 
@@ -139,46 +257,74 @@ def removeGravity(dfXYZ, nStart=0, nEnd=1000):
     
 if __name__ == '__main__':
     
-    dSamplingFreq = 160.0
-
-    strWorkingDir = "../../data/experiment/feasibility/position/"
-
-    strFileName = "teabox_t2_l2_p1_1"
+    dSamplingFreq = 320.0
 
     lsColumnNames = ['x0', 'y0','z0', 'gx0', 'gy0','gz0',
                      'x1', 'y1','z1', 'gx1', 'gy1','gz1']
 
     nBasicFontSize = 16
-
     strBasicFontName = "Times new Roman"
 
-    # load data
-    dfData = loadData(strWorkingDir, strFileName, lsColumnNames)
-    
     import sys
     sys.exit(0)
 
-    #%%  visualize time-domain
-    lsAxis2Inspect = ['x1', 'y1', 'z1']
-    lsColors = lsRGB*6
+#%%  x, y, z @ time domain
+    strWorkingDir = "../../data/experiment/user_identification_v2/"
+    strFileName = "cyj_t18_l2_p0_0"
+    dfData = loadData(strWorkingDir, strFileName, lsColumnNames)
+    
+    lsAxis2Inspect = ['x0', 'y0', 'z0']
+    
 
-    nFFTBatchStart = 0
-    nFFTBatchEnd = -1
-    nRows= 3
-    nCols = int(math.ceil(len(lsAxis2Inspect)/nRows))
+    bPlotRawData = False
+    bPlotSegmentLine = True
+    
+    lsColors = lsRGB*6
+    nRows= len(lsAxis2Inspect)
+    nCols = 2 if bPlotRawData is True else 1
     fig, axes = plt.subplots(nrows=nRows, ncols=nCols, squeeze=False)
     for i, col in enumerate(lsAxis2Inspect):
-        dfData[col].iloc[nFFTBatchStart:nFFTBatchEnd].plot(color=lsColors[i],
-                    ax=axes[i%nRows, int(math.ceil(i/nRows))],
-                    legend=False)
-
+        arrData = dfData[col].values
+        arrFiltered = bp_filter.butter_bandpass_filter(arrData, lowcut=20,
+                                                       highcut=120,
+                                                       fs=dSamplingFreq,
+                                                       order=7)
+        axes[i%nRows, 0].plot(arrFiltered, color=lsColors[i])
+        axes[i%nRows, 0].set_xlabel("%s_filtered" % col)
+        
+        
+        # plot raw data
+        if(bPlotRawData is True):
+            axes[i%nRows, 1].plot(arrData, color=lsColors[i])
+            axes[i%nRows, 1].set_xlabel(col)
+            
+        # plot segement lines
+        if(bPlotSegmentLine is True):
+            lsResponses, arrResponseEndIndex, \
+            arrBandwidthSTD = splitData(arrFiltered,
+                                        dSamplingFreq, 
+                                        nResponses=3,
+                                        nSegmentsPerRespsonse=13,
+                                        dVibrationDuration=1.4,
+                                        dIntervalDuration=0.0,
+                                        dRestDuration=1.0)
+                                     
+            axes[i%nRows, 0].plot(arrBandwidthSTD, color='k')
+            
+            for subsegment in lsResponses:
+                for begin, end in subsegment:
+                    axes[i%nRows, 0].axvline(begin, ls="--", color='c', lw=1)
+                    axes[i%nRows, 0].axvline(end, ls="--", color='m', lw=2)
+                
+            
+                           
     fig.suptitle(strFileName + "@ time domain",
                  fontname=strBasicFontName,
                  fontsize=nBasicFontSize)
     plt.tight_layout()
     plt.show()
-
-    #%% plot modulus
+    
+#%% plot modulus
     lsAxis2Inspect = ['x0', 'y0', 'z0', 'x1', 'y1', 'z1']
     lsColors = lsRGB*2
 
@@ -219,7 +365,7 @@ if __name__ == '__main__':
     plt.tight_layout()
     plt.show()
 
-    #%%  band pass filter
+#%%  band pass filter
     lsColors = lsRGB * 10
     nBPFilterStart = 0
     nBPFilterEnd = nBPFilterStart + (5*60*dSamplingFreq)
@@ -244,44 +390,60 @@ if __name__ == '__main__':
     plt.tight_layout()
     plt.show()
 
-    #%% fft & plot
-    lsAxis2Inspect = ['x1', 'y1', 'z1']
-    lsColors = lsRGB * int(math.ceil(len(lsAxis2Inspect)/3.0 ))
-
+#%% fft & plot
+    strWorkingDir = "../../data/experiment/feasibility/temp/"
+    strFileName = "motor_vol_110"
+    dfData = loadData(strWorkingDir, strFileName, lsColumnNames)
     
-    nDCEnd = 10
+    lsAxis2Inspect = ['x0', 'y0', 'z0']
+    lsColors = lsRGB * int(math.ceil(len(lsAxis2Inspect)/3.0 ))
+    
     dfData2FFT = dfData[lsAxis2Inspect]
-    fig, axes = plt.subplots(nrows=len(lsAxis2Inspect), 
-                             ncols=1, squeeze=False)
-    for i, strCol in enumerate(dfData2FFT.columns):
-        srAxis = dfData2FFT.ix[:, strCol]
+    
+    nDCEnd = 5
+    nFFTBatchStart = 0
+    nFFTBatchEnd = nFFTBatchStart
+    nFFTBatchSize = int(dSamplingFreq*200)
+    
+    nDataLen = dfData2FFT.shape[0]
+    while(nFFTBatchStart<nDataLen ):
+        nFFTBatchEnd = min( (nFFTBatchStart+nFFTBatchSize),nDataLen)
         
-        # bp filter
-        arrFiltered = bp_filter.butter_bandpass_filter(srAxis.values, 5,
-                                                       dSamplingFreq/2.0-5,
-                                                       dSamplingFreq, order=9)
+        print nFFTBatchStart, nFFTBatchEnd
+        fig, axes = plt.subplots(nrows=len(lsAxis2Inspect), 
+                                 ncols=1, squeeze=False)
+        for i, strCol in enumerate(dfData2FFT.columns):
+            srAxis = dfData2FFT.ix[nFFTBatchStart:nFFTBatchEnd, strCol]
+    
+            # fft
+            arrTimeData = srAxis.values
+            nSamples = len(arrTimeData)
+            arrFreqData = fftpack.fft(arrTimeData)
+            arrNormalizedPower = abs(arrFreqData)/(nSamples*1.0)
+    
+            dResolution = dSamplingFreq*1.0/nSamples
+            arrFreqIndex = np.linspace(nDCEnd*dResolution, 
+                                       dSamplingFreq/2.0, nSamples/2-nDCEnd)
+            axes[i, 0].plot(arrFreqIndex, 
+                            arrNormalizedPower[nDCEnd:nSamples/2],
+                            color=lsColors[i])
+            axes[i, 0].set_xticks(range(0, int(dSamplingFreq/2), 1) )
+            axes[i, 0].set_xlabel(lsAxis2Inspect[i] )
+    
+        fig.suptitle( "%s: %d - %d second" % (strFileName,
+                                              nFFTBatchStart/dSamplingFreq,
+                                              nFFTBatchEnd/dSamplingFreq),
+                     fontname=strBasicFontName,
+                     fontsize=nBasicFontSize)
+        fig.tight_layout()
+        plt.show()
+        nFFTBatchStart = nFFTBatchEnd
 
-        # fft
-        nSamples = len(arrFiltered)
-        arrFreq = fftpack.fft(arrFiltered)
-        arrNormalizedPower = abs(arrFreq)/(nSamples*1.0)
-
-        dResolution = dSamplingFreq*1.0/nSamples
-        arrFreqIndex = np.linspace(nDCEnd*dResolution, 
-                                   dSamplingFreq/2.0, nSamples/2-nDCEnd)
-        axes[i, 0].plot(arrFreqIndex, 
-                        arrNormalizedPower[nDCEnd:nSamples/2],
-                        color=lsColors[i])
-        axes[i, 0].set_xticks(range(0, int(dSamplingFreq/2), 2) )
-        axes[i, 0].set_xlabel(lsAxis2Inspect[i] )
-
-    fig.suptitle(strFileName + "@Freq. domain",
-                 fontname=strBasicFontName,
-                 fontsize=nBasicFontSize)
-    plt.tight_layout()
-    plt.show()
-
-    #%%  visualize specgram
+#%%  visualize specgram
+    strWorkingDir = "../../data/experiment/feasibility/temp/"
+    strFileName = "yl_trail_r1"
+    dfData = loadData(strWorkingDir, strFileName, lsColumnNames)
+    
     lsAxis2Inspect = ['x1', 'y1', 'z1']
     lsColors = lsRGB * int(math.ceil(len(lsAxis2Inspect)/3.0 ))
 
@@ -296,7 +458,7 @@ if __name__ == '__main__':
             mode='psd',
             NFFT=int(dSamplingFreq*1),
             Fs=dSamplingFreq,
-            noverlap=int(dSamplingFreq/4.0) )
+            noverlap=0)
         axes[i, 0].set_xlabel(col)
     fig.suptitle(strFileName + "@ specgram",
                  fontname=strBasicFontName,
@@ -304,10 +466,7 @@ if __name__ == '__main__':
     plt.tight_layout()
     plt.show()
 
-    # %%
-    #==============================================================================
-    # FRF
-    #==============================================================================
+# %% FRF
     lsRespCols = ['x0', 'y0', 'z0']
     lsExcCols = ['x1', 'y1', 'z1']
     dfResp = dfData[lsRespCols]

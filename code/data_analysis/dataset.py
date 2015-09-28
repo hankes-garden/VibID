@@ -271,5 +271,30 @@ lsTB_t2_l2_p2 = ["teabox_t2_l2_p2_0", "teabox_t2_l2_p2_1",
 lsTB_t2_l2_p3 = ["teabox_t2_l2_p3_0", "teabox_t2_l2_p3_1", 
                  "teabox_t2_l2_p3_2"]
                  
-# without touching desk
 lsCYJ_t16_l2_px = ["cyj_t16_l2_p0_0", "cyj_t16_l2_p1_0", "cyj_t16_l2_p3_0"]
+
+#==============================================================================
+# data\experiment\user_identification_v2\
+#==============================================================================
+lsQY_t5_l2_p0 = ["qy_t5_l2_p0_0", "qy_t5_l2_p0_1", "qy_t5_l2_p0_2"]
+lsQY_t6_l2_p0 = ["qy_t6_l2_p0_0", "qy_t6_l2_p0_1", "qy_t6_l2_p0_2"]
+
+lsCYJ_t17_l2_p0 = ["cyj_t17_l2_p0_0", "cyj_t17_l2_p0_1", "cyj_t17_l2_p0_2"]
+lsCYJ_t18_l2_p0 = ["cyj_t18_l2_p0_0", "cyj_t18_l2_p0_1", "cyj_t18_l2_p0_2"]
+
+lsYL_t32_l2_p0 = ["yl_t32_l2_p0_0", "yl_t32_l2_p0_1", "yl_t32_l2_p0_2"]
+lsYL_t33_l2_p0 = ["yl_t33_l2_p0_0", "yl_t33_l2_p0_1", "yl_t33_l2_p0_2"]
+lsYL_t35_l2_p0 = ["yl_t35_l2_p0_0", "yl_t35_l2_p0_1", "yl_t35_l2_p0_2"]
+
+lsHCY_t6_l2_p0 = ["hcy_t6_l2_p0_0", "hcy_t6_l2_p0_1", "hcy_t6_l2_p0_2"]
+lsHCY_t7_l2_p0 = ["hcy_t7_l2_p0_0", "hcy_t7_l2_p0_1", 
+                  "hcy_t7_l2_p0_2", "hcy_t7_l2_p0_3"]
+
+lsWW_t9_l2_p0 = ["ww_t9_l2_p0_0", "ww_t9_l2_p0_1", "ww_t9_l2_p0_2"]
+lsWW_t10_l2_p0 = ["ww_t10_l2_p0_0", "ww_t10_l2_p0_1", 
+                  "ww_t10_l2_p0_2", "ww_t10_l2_p0_3"]
+                  
+#==============================================================================
+# posture test: experiment\feasibility\posture\
+#==============================================================================
+lsYL_t34_l2_p0 = ["yl_t34_l2_p0_h0", "yl_t34_l2_p0_h1", "yl_t34_l2_p0_h2"]

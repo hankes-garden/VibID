@@ -69,20 +69,20 @@ void setup() {
   // set range of sensor 0
   Wire.beginTransmission(MPU6050_I2C_ADDRESS_0);
   Wire.write(MPU6050_ACCEL_CONFIG);
-  Wire.write(MPU6050_AFS_SEL_3);     // set range
+  Wire.write(MPU6050_AFS_SEL_0);     // set range
   Wire.endTransmission(true);
   
-  // weak up sensor 1
-  Wire.beginTransmission(MPU6050_I2C_ADDRESS_1);
-  Wire.write(MPU6050_PWR_MGMT_1);  // PWR_MGMT_1 register
-  Wire.write(0);     // set to zero (wakes up the MPU6050_I2C_ADDRESS_0-6050)
-  Wire.endTransmission(true);
+  // // weak up sensor 1
+  // Wire.beginTransmission(MPU6050_I2C_ADDRESS_1);
+  // Wire.write(MPU6050_PWR_MGMT_1);  // PWR_MGMT_1 register
+  // Wire.write(0);     // set to zero (wakes up the MPU6050_I2C_ADDRESS_0-6050)
+  // Wire.endTransmission(true);
   
-  // set range of sensor 1
-  Wire.beginTransmission(MPU6050_I2C_ADDRESS_1);
-  Wire.write(MPU6050_ACCEL_CONFIG);
-  Wire.write(MPU6050_AFS_SEL_3);     // set range
-  Wire.endTransmission(true);
+  // // set range of sensor 1
+  // Wire.beginTransmission(MPU6050_I2C_ADDRESS_1);
+  // Wire.write(MPU6050_ACCEL_CONFIG);
+  // Wire.write(MPU6050_AFS_SEL_0);     // set range
+  // Wire.endTransmission(true);
 
   // setup serial
   Serial.begin(115200);
@@ -103,19 +103,19 @@ void loop() {
 	nGyroY0 = Wire.read() << 8 | Wire.read(); // 0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
 	nGyroZ0 = Wire.read() << 8 | Wire.read(); // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
 	
-	/*----read sensor 1----*/
-	Wire.beginTransmission(MPU6050_I2C_ADDRESS_1);
-	Wire.write(MPU6050_ACCEL_XOUT_H);  // starting with register 0x3B (ACCEL_XOUT_H)
-	Wire.endTransmission(false);
-	Wire.requestFrom(MPU6050_I2C_ADDRESS_1, 14, true); // request a total of 14 registers
+	// /*----read sensor 1----*/
+	// Wire.beginTransmission(MPU6050_I2C_ADDRESS_1);
+	// Wire.write(MPU6050_ACCEL_XOUT_H);  // starting with register 0x3B (ACCEL_XOUT_H)
+	// Wire.endTransmission(false);
+	// Wire.requestFrom(MPU6050_I2C_ADDRESS_1, 14, true); // request a total of 14 registers
 
-	nAccX1 = Wire.read() << 8 | Wire.read(); // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)
-	nAccY1 = Wire.read() << 8 | Wire.read(); // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
-	nAccZ1 = Wire.read() << 8 | Wire.read(); // 0x3F (ACCEL_ZOUT_H) & 0x40 (ACCEL_ZOUT_L)
+	// nAccX1 = Wire.read() << 8 | Wire.read(); // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)
+	// nAccY1 = Wire.read() << 8 | Wire.read(); // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
+	// nAccZ1 = Wire.read() << 8 | Wire.read(); // 0x3F (ACCEL_ZOUT_H) & 0x40 (ACCEL_ZOUT_L)
 
-	nGyroX1 = Wire.read() << 8 | Wire.read(); // 0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
-	nGyroY1 = Wire.read() << 8 | Wire.read(); // 0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
-	nGyroZ1 = Wire.read() << 8 | Wire.read(); // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
+	// nGyroX1 = Wire.read() << 8 | Wire.read(); // 0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
+	// nGyroY1 = Wire.read() << 8 | Wire.read(); // 0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
+	// nGyroZ1 = Wire.read() << 8 | Wire.read(); // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
 
 	/*----print to serial----*/
 	// Serial.print(millis() ); Serial.print(", ");
@@ -126,14 +126,16 @@ void loop() {
 
 	Serial.print(nGyroX0); Serial.print(", ");
 	Serial.print(nGyroY0); Serial.print(", ");
-	Serial.print(nGyroZ0); Serial.print(", ");
+	Serial.println(nGyroZ0);
 
-	// sensor 1
-	Serial.print(nAccX1); Serial.print(", ");
-	Serial.print(nAccY1); Serial.print(", ");
-	Serial.print(nAccZ1); Serial.print(", ");
+	// Serial.print(", ");
 
-	Serial.print(nGyroX1); Serial.print(", ");
-	Serial.print(nGyroY1); Serial.print(", ");
-	Serial.println(nGyroZ1);
+	// // sensor 1
+	// Serial.print(nAccX1); Serial.print(", ");
+	// Serial.print(nAccY1); Serial.print(", ");
+	// Serial.print(nAccZ1); Serial.print(", ");
+
+	// Serial.print(nGyroX1); Serial.print(", ");
+	// Serial.print(nGyroY1); Serial.print(", ");
+	// Serial.println(nGyroZ1);
 }
