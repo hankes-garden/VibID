@@ -354,7 +354,7 @@ if __name__ == "__main__":
     sys.exit(0)
 
 #%% plot X, Y, Z
-#    strWorkingDir = "../../data/experiment/user_identification/"
+    strWorkingDir = "../../data/experiment/user_identification/"
 #    lsFileNames = ds.lsYL_t22_l1 + ds.lsYL_t23_l1
 #    lsFileNames = ds.lsQY_t3_l1 + ds.lsQY_t4_l1
 #    lsFileNames = ds.lsWW_t7_l1 + ds.lsWW_t8_l1
@@ -362,16 +362,17 @@ if __name__ == "__main__":
 #    lsFileNames = ds.lsHCY_t4_l1 + ds.lsHCY_t5_l1
 #    lsFileNames = ds.lsHY_t1_l1 + ds.lsHY_t2_l1
 #    lsFileNames = ds.lsZY_t1_l1 + ds.lsZY_t2_l1 + ds.lsZY_t2_l10
+    lsFileNames = ds.lsYL_t22_l1[:2] + ds.lsCYJ_t15_l1[:2]
     
-    strWorkingDir = "../../data/experiment/feasibility/position/"
-    lsFileNames = ds.lsYL_t25_l2_p0 + ds.lsYL_t25_l2_p1 + ds.lsYL_t25_l2_p3
+#    strWorkingDir = "../../data/experiment/feasibility/position/"
+#    lsFileNames = ds.lsYL_t25_l2_p0 + ds.lsYL_t25_l2_p1 + ds.lsYL_t25_l2_p3
                  
     lsData = md.loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
     lsColumn2Plot = ['x0', 'y0', 'z0']
-    md.plotEx(lsData, lsFileNames, lsColumn2Plot, nMaxColumnPerSubplot=5)
+    md.plotEx(lsData, lsFileNames, lsColumn2Plot, nMaxColumnPerSubplot=4)
 
 #%% compute modulus
-#    strWorkingDir = "../../data/experiment/user_identification/"
+    strWorkingDir = "../../data/experiment/user_identification/"
 #    lsFileNames = ds.lsYL_t22_l1 + ds.lsYL_t23_l1 + ds.lsYL_t24_l1
 #    lsFileNames = ds.lsQY_t3_l1 + ds.lsQY_t4_l1
 #    lsFileNames = ds.lsWW_t7_l1 + ds.lsWW_t8_l1
@@ -379,12 +380,13 @@ if __name__ == "__main__":
 #    lsFileNames = ds.lsHCY_t4_l1 + ds.lsHCY_t5_l1
 #    lsFileNames = ds.lsHY_t1_l1 + ds.lsHY_t2_l1
 #    lsFileNames = ds.lsZY_t1_l1 + ds.lsZY_t2_l1 + ds.lsZY_t2_l10
+    lsFileNames = ds.lsYL_t22_l1[:2] + ds.lsCYJ_t15_l1[:2]
     
-    strWorkingDir = "../../data/experiment/feasibility/position/"
+#    strWorkingDir = "../../data/experiment/feasibility/position/"
 #    lsFileNames = ds.lsYL_t25_l2_p0 + ds.lsYL_t25_l2_p1 + ds.lsYL_t25_l2_p3
 #    lsFileNames = ds.lsYL_t26_l2_p0
 #    lsFileNames = ds.lsTB_t2_l2_p1 + ds.lsTB_t2_l2_p2 + ds.lsTB_t2_l2_p3
-    lsFileNames = ds.lsCYJ_t16_l2_px
+#    lsFileNames = ds.lsCYJ_t16_l2_px
                   
     lsData = md.loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
 
@@ -394,7 +396,7 @@ if __name__ == "__main__":
 
     lsColumn2Plot = ['x0', 'y0', 'z0']
     md.plotModolusEx(lsData, lsFileNames,
-                     lsColumn2Plot, dSamplingFreq, nMaxRows=3,
+                     lsColumn2Plot, dSamplingFreq, nMaxRows=2,
                      bPlotModulus=True, bPlotShapeLine=False,
                      bPlotFeatureLines=False, nYMax=1500)
 
@@ -479,15 +481,14 @@ if __name__ == "__main__":
 #                   "n_jobs": -1, "warm_start": False, 
 #                   "random_state": 7}
 
-    strModelName = 'random_forest'
-    modelParams = {'n_estimators':500, "criterion":"gini", 
-                   "max_features": "auto", "oob_score":True, 
-                   "n_jobs": -1, "warm_start": False, 
-                   "random_state": 7}
+#    strModelName = 'random_forest'
+#    modelParams = {'n_estimators':500, "criterion":"gini", 
+#                   "max_features": "auto", "oob_score":True, 
+#                   "n_jobs": -1, "warm_start": False, 
+#                   "random_state": 7}
 
-#    strModelName = 'decision_tree'
-#    modelParams = {"criterion": "gini", "splitter": "random",
-#                   "max_features": 0.5, }
+    strModelName = 'decision_tree'
+    modelParams = {"criterion": "gini"}
 
 #    strModelName = 'SVM'
 #    modelParams = None
@@ -496,19 +497,19 @@ if __name__ == "__main__":
     dcResults = classify(mtX, arrY, strModelName, modelParams,
                          lsFeatureColumns, nFold=5)
 
-#    # feature importance
-#    for nFold, dcFoldResult in dcResults.iteritems():
-#        print("Fold %d:" % (nFold) )
-#        lsFeatureImp = sorted(dcFoldResult[CN_MODEL_FEATURE_IMP].items(),
-#                              key=operator.itemgetter(1), reverse=True )
-#        for strFeature, dImp in lsFeatureImp[:20]:
-#            print("%s: %.2f" % (strFeature, dImp) )
-#
-#        print("--")
-#        print("Accuracy: %.2f" % (dcFoldResult[CN_MODEL_ACCURACY]) )
-#        print ("Sum: %.2f" % \
-#               sum(dcFoldResult[CN_MODEL_FEATURE_IMP].values() ) )
-#        print("****\n")
+    # feature importance
+    for nFold, dcFoldResult in dcResults.iteritems():
+        print("Fold %d:" % (nFold) )
+        lsFeatureImp = sorted(dcFoldResult[CN_MODEL_FEATURE_IMP].items(),
+                              key=operator.itemgetter(1), reverse=True )
+        for strFeature, dImp in lsFeatureImp[:20]:
+            print("%s: %.2f" % (strFeature, dImp) )
+
+        print("--")
+        print("Accuracy: %.2f" % (dcFoldResult[CN_MODEL_ACCURACY]) )
+        print ("Sum: %.2f" % \
+               sum(dcFoldResult[CN_MODEL_FEATURE_IMP].values() ) )
+        print("****\n")
 
     # overall performance
     lsAccuracy = [ i[CN_MODEL_ACCURACY] for i in dcResults.values()]
@@ -520,3 +521,4 @@ if __name__ == "__main__":
           "mean=%.2f, std=%.2f" % \
            (dBestAccuracy, dWorstAccuracy,
             dMeanAccuracy, dAccuracyStd) )
+

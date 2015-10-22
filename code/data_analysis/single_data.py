@@ -5,13 +5,13 @@ aslo, in its main body, it perform measurement on single data
 
 @author: jason
 """
-
+import bp_filter
 import numpy as np
 import scipy.fftpack as fftpack
 import matplotlib.pyplot as plt
 import pandas as pd
-import bp_filter
 import math
+import operator
 
 lsRGB = ['r', 'g', 'b']
 lsCMYK = ['c', 'm', 'y']
@@ -25,6 +25,8 @@ def computeEnvelope(arrData, nWindow, nMinPeriods=None):
     return arrUpperEnvelope, arrLowerEnvelope
     
 def findReponseEndIndex(arrData, dSamplingFreq, nResponses, 
+                        dResponseDuration,
+                        dRestDuration,
                         nSearchStartIndex = 100,
                         nDiscoutinousDistance = 100):
     """
@@ -33,18 +35,25 @@ def findReponseEndIndex(arrData, dSamplingFreq, nResponses,
         
         Parameters:
         ----
-        arrValue: the data
-        dSamplingRate: sampling rate of data
-        nResponses: number of responses
-        nSearchStartIndex: the start index of response searching
-        nDiscoutinousDistance: number of points btw two humps
+        arrValue: 
+            the data
+        dSamplingRate: 
+            sampling rate of data
+        nResponses: 
+            number of responses
+        nSearchStartIndex: 
+            the start index of response searching
+        nDiscoutinousDistance: 
+            number of points btw two humps
         
         Returns:
         ----
-        lsResponseEndIndex: a list of end index of responses
-        arrBandwidthSTD: the reference data to find responses
+        lsResponseEndIndex: 
+            a list of end index of responses
+        arrBandwidthSTD: 
+            the reference data to find responses
     """
-    nWindowSize = 10
+    nWindowSize = 50
     arrUpperEnvelope, \
     arrLowerEnvelope = computeEnvelope(arrData, nWindowSize)
     arrBandWidth = arrUpperEnvelope - arrLowerEnvelope
@@ -54,55 +63,35 @@ def findReponseEndIndex(arrData, dSamplingFreq, nResponses,
     lsPeaks = []
     
     # compute the minimal valume of peak candidates
-    dMinPeakValume = 0.10 * (np.max(arrData[int(3*dSamplingFreq):-1]) \
-                    - np.min(arrData[int(3*dSamplingFreq):-1]) )  
+    dMinPeakValume = (pd.Series(arrBandwidthSTD)).describe()['75%']
                     
                     
     # select points whose value is larger than dMinPeakValume
-    arrRespEndIndexCandidates = np.where(arrBandwidthSTD >= dMinPeakValume)[0]
+    arrPeakCandidateIndex = np.where(arrBandwidthSTD >= dMinPeakValume)[0]
     
     # only need points indexed after nSearchStartIndex
-    arrRespEndIndexCandidates = \
-        arrRespEndIndexCandidates[arrRespEndIndexCandidates>=nSearchStartIndex]
+    arrPeakCandidateIndex = \
+        arrPeakCandidateIndex[arrPeakCandidateIndex>=nSearchStartIndex]
+        
+    # find peaks
+    lsPeaks = [(nIndex, arrBandwidthSTD[nIndex]) \
+               for nIndex in arrPeakCandidateIndex]
     
-    # find discontinuous humps
-    nHumpStart = 0
-    nHumpEnd = nHumpStart+1
-    while(nHumpEnd < len(arrRespEndIndexCandidates) ):
-        if ( (arrRespEndIndexCandidates[nHumpEnd]- \
-              arrRespEndIndexCandidates[nHumpEnd-1]) \
-             < nDiscoutinousDistance ):
-            nHumpEnd += 1 
-        else:
-            # note that for numpy.array, the index is 
-            # not changed after slicing
-            arrHumpIndexRange = arrRespEndIndexCandidates[nHumpStart:nHumpEnd]
-            arrHumpValues = arrBandwidthSTD[arrHumpIndexRange] 
-            # let the peak point represents this hump
-            nPeakIndex = np.argmax(arrHumpValues)
-            lsPeaks.append( (nPeakIndex, arrHumpValues[nPeakIndex]) )
-            
-            nHumpStart = nHumpEnd
-            nHumpEnd = nHumpStart+1
-     
-
-    if (nHumpEnd > (nHumpStart+1) ): # last subsegment is not count yet
-        # note that for numpy.array, the index does 
-        # not change after slicing
-        arrHumpIndexRange = arrRespEndIndexCandidates[nHumpStart:nHumpEnd]
-        arrHumpValues = arrBandwidthSTD[arrHumpIndexRange] 
-        # let the peak point represents this hump
-        nPeakIndex = np.argmax(arrHumpValues)
-        lsPeaks.append((nPeakIndex, arrHumpValues[nPeakIndex]) )
+    # search for the ending peak for responses
+    lsEndingPeaks = []
+    nSearchEnd = len(arrData)
+    nSearchStart = int(nSearchEnd - (dResponseDuration/3.0)*dSamplingFreq)
+    for i in xrange(nResponses):
+        lsCandidates = [peak for peak in lsPeaks if \
+                              peak[0]>=nSearchStart and \
+                              peak[0]<nSearchEnd]
+        tpEndingPeak = max(lsCandidates, key = operator.itemgetter(1) )
+        lsEndingPeaks.append(tpEndingPeak)
+        nSearchEnd = int(tpEndingPeak[0] - \
+                     (dResponseDuration+dRestDuration)*dSamplingFreq + 2*dSamplingFreq)
+        nSearchStart = int(nSearchEnd - (dResponseDuration/4.0)*dSamplingFreq)
     
-    # find the minimal value for top K humps
-    lsSortedPeaks = sorted(lsPeaks, key=lambda x: x[1], reverse=True)
-    dTopPeakThreshold = lsSortedPeaks[nResponses-1][1] 
-    
-    # find top k peaks --> their index is the end index of response
-    lsResponseEndIndex = [peak[0] for peak in lsPeaks \
-                          if peak[1] >= dTopPeakThreshold]
-     
+    lsResponseEndIndex = sorted([peak[0] for peak in lsEndingPeaks], reverse=True)
     
     return lsResponseEndIndex, arrBandwidthSTD
             
@@ -119,25 +108,39 @@ def splitData(arrData, dSamplingFreq, nResponses,
         
         Parameters:
         ----
-        arrData: the data
-        dSamplingFreq: sampling frequency of data
-        nResponses: number of responses in this data
-        nSegmentPerResponse: number of segement per response
-        dVibrationDuration: duration of each vibration in seconds
-        dIntervalDuration: static duration btw vibrations in seconds
-        dRestDuration: rest duration btw responses in seconds
+        arrData: 
+            the data
+        dSamplingFreq: 
+            sampling frequency of data
+        nResponses: 
+            number of responses in this data
+        nSegmentPerResponse: 
+            number of segement per response
+        dVibrationDuration: 
+            duration of each vibration in seconds
+        dIntervalDuration: 
+            static duration btw vibrations in seconds
+        dRestDuration: 
+            rest duration btw responses in seconds
         
         Returns:
         ----
-        lsResponses: list of segment lists, each of which represent an response
-        arrResponseEndIndex: the ending index of each responses
-        arrBandwidthSTD: the std of data variation range 
+        lsResponses: 
+            list of segment lists, each of which represent an response
+        arrResponseEndIndex: 
+            the ending index of each responses
+        arrBandwidthSTD: 
+            the std of data variation range 
     """
     # find the end of response via the std of variation
+    dResponseDuration = nSegmentsPerRespsonse*dVibrationDuration + \
+                        (nSegmentsPerRespsonse-1)*dIntervalDuration
     arrResponseEndIndex, \
     arrBandwidthSTD = findReponseEndIndex(arrData,
                                           dSamplingFreq,
                                           nResponses,
+                                          dResponseDuration,
+                                          dRestDuration,
                                           int(2*dSamplingFreq),
                                           int(1*dSamplingFreq) )
                                        
@@ -147,7 +150,8 @@ def splitData(arrData, dSamplingFreq, nResponses,
               nSegmentsPerRespsonse*(dVibrationDuration+dIntervalDuration) \
               *dSamplingFreq ) \
             < 0.0 ): 
-            raise ValueError("Invalid end index of response.")
+            print "Invalid end index of response", arrResponseEndIndex
+#            raise ValueError("Invalid end index of response.")
             
         
         lsSegments = []
@@ -174,10 +178,14 @@ def loadData(strWorkingDir, strFileName, lsColumnNames, strFileExt = '.txt'):
 
         Parameters
         ----------
-        strWorkingDir: working directory
-        strFileName: file name
-        lsColumnNames: a list of column names
-        strFileExt: file extention
+        strWorkingDir: 
+            working directory
+        strFileName: 
+            file name
+        lsColumnNames: 
+            a list of column names
+        strFileExt: 
+            file extention
 
         Returns
         ----------
@@ -202,7 +210,8 @@ def computeModulus(dfXYZ):
 
     Parameters
     ----------
-    dfXYS: data frame containing X, Y, Z data
+    dfXYS: 
+        data frame containing X, Y, Z data
 
     Returns
     ----------
@@ -219,9 +228,12 @@ def computeGravity(dfXYZ, nStart=0, nEnd=5000):
 
         Parameters
         ----------
-        dfXYZ: 3-column ACC data frame
-        nStart: the start point of stable state
-        nEnd: the end point of stable state
+        dfXYZ: 
+            3-column ACC data frame
+        nStart: 
+            the start point of stable state
+        nEnd: 
+            the end point of stable state
 
         Returns
         ----------
@@ -239,9 +251,12 @@ def removeGravity(dfXYZ, nStart=0, nEnd=1000):
 #
         Parameteres
         -----------
-        dfXYZ: 3-column ACC data frame
-        nStart: start point of stable state
-        nEnd: end point of stable state
+        dfXYZ: 
+            3-column ACC data frame
+        nStart: 
+            start point of stable state
+        nEnd: 
+            end point of stable state
 
         Returns
         ----------
@@ -269,28 +284,36 @@ if __name__ == '__main__':
     sys.exit(0)
 
 #%%  x, y, z @ time domain
-    strWorkingDir = "../../data/experiment/user_identification_v2/"
-    strFileName = "cyj_t18_l2_p0_0"
+    strWorkingDir = "../../data/experiment/user_data_v5/lq/"
+    strFileName = "lq_t1_v0_p0_m0_d1_l0_3"
+    
     dfData = loadData(strWorkingDir, strFileName, lsColumnNames)
     
-    lsAxis2Inspect = ['x0', 'y0', 'z0']
+    lsAxis2Inspect = ['x0','y0','z0']
+    
     
 
-    bPlotRawData = False
+    bPlotRawData = True
     bPlotSegmentLine = True
+    bPlotModulus = True
     
-    lsColors = lsRGB*6
-    nRows= len(lsAxis2Inspect)
+    lsColors = lsRGB*60
+#    lsColors = ['#65737e']*3
+    
+    nRows= len(lsAxis2Inspect)+1 if bPlotModulus else len(lsAxis2Inspect)
     nCols = 2 if bPlotRawData is True else 1
     fig, axes = plt.subplots(nrows=nRows, ncols=nCols, squeeze=False)
+    
+    lsResponses, arrResponseEndIndex, arrBandwidthSTD = None, None, None
     for i, col in enumerate(lsAxis2Inspect):
         arrData = dfData[col].values
         arrFiltered = bp_filter.butter_bandpass_filter(arrData, lowcut=20,
-                                                       highcut=120,
+                                                       highcut=130,
                                                        fs=dSamplingFreq,
-                                                       order=7)
+                                                       order=10)
         axes[i%nRows, 0].plot(arrFiltered, color=lsColors[i])
         axes[i%nRows, 0].set_xlabel("%s_filtered" % col)
+#        axes[i%nRows, 0].set_ylim(-700, 700)
         
         
         # plot raw data
@@ -310,15 +333,46 @@ if __name__ == '__main__':
                                         dRestDuration=1.0)
                                      
             axes[i%nRows, 0].plot(arrBandwidthSTD, color='k')
+
+            for nRespEndIndex in arrResponseEndIndex:
+                axes[i%nRows, 0].axvline(nRespEndIndex, ls="-", 
+                                         color='m', lw=2, 
+                                         alpha=0.6)
             
             for subsegment in lsResponses:
                 for begin, end in subsegment:
-                    axes[i%nRows, 0].axvline(begin, ls="--", color='c', lw=1)
-                    axes[i%nRows, 0].axvline(end, ls="--", color='m', lw=2)
+                    axes[i%nRows, 0].axvline(begin, ls="--", color='m', 
+                                             lw=1)
+#                    axes[i%nRows, 0].axvline(end, ls="--", 
+#                                             color='c', lw=1)
                 
+    if(bPlotModulus is True):
+        dfXYZ = dfData.iloc[:, :3]
+        dfXYZ_noG = removeGravity(dfXYZ, nStart=0, nEnd=dSamplingFreq*1)
+        arrModulus = computeModulus(dfXYZ_noG)
+                                                          
+        axes[len(lsAxis2Inspect), 0].plot(arrModulus, color='k')
+        
+        if(bPlotRawData is True):
+            axes[len(lsAxis2Inspect), 1].plot(arrModulus, color='k')
+            
+        if(bPlotSegmentLine is True):
+            for nRespEndIndex in arrResponseEndIndex:
+                axes[len(lsAxis2Inspect), 0].axvline(nRespEndIndex, 
+                                                     ls="-",
+                                                     color='m', 
+                                                     lw=2,
+                                                     alpha=0.6)
+            
+            for subsegment in lsResponses:
+                for begin, end in subsegment:
+                    axes[len(lsAxis2Inspect), 0].axvline(begin, 
+                                                         ls="--", 
+                                                         color='m',
+                                                         lw=1)
             
                            
-    fig.suptitle(strFileName + "@ time domain",
+    fig.suptitle(strFileName,
                  fontname=strBasicFontName,
                  fontsize=nBasicFontSize)
     plt.tight_layout()
@@ -348,13 +402,17 @@ if __name__ == '__main__':
 
             # plot envelope
             nWindow = 30
-            arrUpperEnvelope = pd.rolling_max(pd.Series(arrModulus), window=nWindow,
+            arrUpperEnvelope = pd.rolling_max(pd.Series(arrModulus),
+                                              window=nWindow,
                                               min_periods=1)
-            arrLowerEnvelope = pd.rolling_min(pd.Series(arrModulus), window=nWindow,
-                                             min_periods=1)
+            arrLowerEnvelope = pd.rolling_min(pd.Series(arrModulus),
+                                              window=nWindow,
+                                              min_periods=1)
 
-            axes[i%nRows, 0].plot(arrUpperEnvelope, color='r', lw=2, alpha=0.7)
-            axes[i%nRows, 0].plot(arrLowerEnvelope, color='r', lw=2, alpha=0.7)
+            axes[i%nRows, 0].plot(arrUpperEnvelope, color='r', 
+                                  lw=2, alpha=0.7)
+            axes[i%nRows, 0].plot(arrLowerEnvelope, color='r', 
+                                  lw=2, alpha=0.7)
 
             axes[i%nRows, 0].set_xlabel(strFormula )
 
@@ -391,8 +449,8 @@ if __name__ == '__main__':
     plt.show()
 
 #%% fft & plot
-    strWorkingDir = "../../data/experiment/feasibility/temp/"
-    strFileName = "motor_vol_110"
+    strWorkingDir = "../../data/experiment/user_motion/"
+    strFileName = "arm_motion"
     dfData = loadData(strWorkingDir, strFileName, lsColumnNames)
     
     lsAxis2Inspect = ['x0', 'y0', 'z0']
@@ -401,13 +459,15 @@ if __name__ == '__main__':
     dfData2FFT = dfData[lsAxis2Inspect]
     
     nDCEnd = 5
-    nFFTBatchStart = 0
+    nFFTStart = 0
+    nFFTEnd = dfData2FFT.shape[0]
+    
+    nFFTBatchStart = nFFTStart
     nFFTBatchEnd = nFFTBatchStart
     nFFTBatchSize = int(dSamplingFreq*200)
     
-    nDataLen = dfData2FFT.shape[0]
-    while(nFFTBatchStart<nDataLen ):
-        nFFTBatchEnd = min( (nFFTBatchStart+nFFTBatchSize),nDataLen)
+    while(nFFTBatchStart<nFFTEnd ):
+        nFFTBatchEnd = min( (nFFTBatchStart+nFFTBatchSize), nFFTEnd)
         
         print nFFTBatchStart, nFFTBatchEnd
         fig, axes = plt.subplots(nrows=len(lsAxis2Inspect), 
@@ -427,7 +487,9 @@ if __name__ == '__main__':
             axes[i, 0].plot(arrFreqIndex, 
                             arrNormalizedPower[nDCEnd:nSamples/2],
                             color=lsColors[i])
-            axes[i, 0].set_xticks(range(0, int(dSamplingFreq/2), 1) )
+#            dc = {'x0': 300, 'y0':200, 'z0':100}
+#            tpYLim = (0, dc[strCol])
+#            axes[i, 0].set_ylim(tpYLim)
             axes[i, 0].set_xlabel(lsAxis2Inspect[i] )
     
         fig.suptitle( "%s: %d - %d second" % (strFileName,

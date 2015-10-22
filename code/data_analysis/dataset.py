@@ -6,7 +6,8 @@ Dataset
 """
 
 # QY
-lsQY_t1= ['qy_1_1_60', 'qy_1_1_45', 'qy_1_1_45_1', 'qy_1_1_45_2', 'qy_1_1_60_1']
+lsQY_t1= ['qy_1_1_60', 'qy_1_1_45', 'qy_1_1_45_1', 
+          'qy_1_1_45_2', 'qy_1_1_60_1']
 
 # CYJ
 lsCYJ_t1 = ['cyj_55', 'cyj_60', 'cyj_75', 
@@ -138,9 +139,11 @@ lsZLW_l10 = lsZLW_t1_l10 + lsZLW_t2_l10 + lsZLW_t2_l10
 lsLZY_l1 = lsLZY_t1_l1 + lsLZY_t2_l1 + lsLZY_t3_l1
 lsLZY_l10 = lsLZY_t1_l10 + lsLZY_t2_l10 + lsLZY_t3_l10
 
-lsCYJ_l1 = lsCYJ_t6_l1 + lsCYJ_t7_l1 + lsCYJ_t8_l1 + lsCYJ_t9_l1 + lsCYJ_t10_l1
+lsCYJ_l1 = lsCYJ_t6_l1 + lsCYJ_t7_l1 + lsCYJ_t8_l1 + \
+           lsCYJ_t9_l1 + lsCYJ_t10_l1
 
-lsYL_l1 = lsYL_t14_l1 + lsYL_t15_l1 + lsYL_t16_l1 + lsYL_t17_l1 + lsYL_t18_l1
+lsYL_l1 = lsYL_t14_l1 + lsYL_t15_l1 + lsYL_t16_l1 + \
+          lsYL_t17_l1 + lsYL_t18_l1
         
 #==============================================================================
 # feasibility_v7        
@@ -202,7 +205,7 @@ lsHCY_t3_l10 = ["hcy_t3_l10_25", "hcy_t3_l10_25_1", "hcy_t3_l10_25_2"]
 lsHCY_t3 = lsHCY_t3_l1 + lsHCY_t3_l10
 
 #==============================================================================
-# data\experiment\user_identification\
+# data\experiment\user_data_v1\
 #==============================================================================
 lsCUP_t1_l1 = ["cup_t1_l1_0", "cup_t1_l1_1", "cup_t1_l1_2"]
 lsCUP_t1_l10 = ["cup_t1_l10_0", "cup_t1_l10_1", "cup_t1_l10_2"]
@@ -274,7 +277,7 @@ lsTB_t2_l2_p3 = ["teabox_t2_l2_p3_0", "teabox_t2_l2_p3_1",
 lsCYJ_t16_l2_px = ["cyj_t16_l2_p0_0", "cyj_t16_l2_p1_0", "cyj_t16_l2_p3_0"]
 
 #==============================================================================
-# data\experiment\user_identification_v2\
+# data\experiment\user_data_v2\
 #==============================================================================
 lsQY_t5_l2_p0 = ["qy_t5_l2_p0_0", "qy_t5_l2_p0_1", "qy_t5_l2_p0_2"]
 lsQY_t6_l2_p0 = ["qy_t6_l2_p0_0", "qy_t6_l2_p0_1", "qy_t6_l2_p0_2"]
@@ -298,3 +301,437 @@ lsWW_t10_l2_p0 = ["ww_t10_l2_p0_0", "ww_t10_l2_p0_1",
 # posture test: experiment\feasibility\posture\
 #==============================================================================
 lsYL_t34_l2_p0 = ["yl_t34_l2_p0_h0", "yl_t34_l2_p0_h1", "yl_t34_l2_p0_h2"]
+
+#==============================================================================
+# data\experiment\user_data_v3\
+#==============================================================================
+# yl: base state
+lsYL_t35_v0_p0_m0_d1_l0 = ["yl_t35_v0_p0_m0_d1_l0_0", 
+                       "yl_t35_v0_p0_m0_d1_l0_1",
+                       "yl_t35_v0_p0_m0_d1_l0_2", 
+                       "yl_t35_v0_p0_m0_d1_l0_3",
+                       "yl_t35_v0_p0_m0_d1_l0_4"]
+
+# yl: p30
+lsYL_t35_v0_p30_m0_d1_l0 = ["yl_t35_v0_p30_m0_d1_l0_0", 
+                        "yl_t35_v0_p30_m0_d1_l0_1",
+                        "yl_t35_v0_p30_m0_d1_l0_2", 
+                        "yl_t35_v0_p30_m0_d1_l0_3",
+                        "yl_t35_v0_p30_m0_d1_l0_4"]
+
+# yl: p330
+lsYL_t35_v0_p330_m0_d1_l0 = ["yl_t35_v0_p330_m0_d1_l0_0", 
+                         "yl_t35_v0_p330_m0_d1_l0_1",
+                         "yl_t35_v0_p330_m0_d1_l0_2"]
+
+# yl: m1                        
+lsYL_t35_v0_p0_m1_d1_l0 = ["yl_t35_v0_p0_m1_d1_l0_0", 
+                       "yl_t35_v0_p0_m1_d1_l0_1",
+                       "yl_t35_v0_p0_m1_d1_l0_2"]
+
+# yl: v1                      
+lsYL_t35_v1_p0_m0_d1_l0 = ["yl_t35_v1_p0_m0_d1_l0_0", 
+                       "yl_t35_v1_p0_m0_d1_l0_1",
+                       "yl_t35_v1_p0_m0_d1_l0_2"]
+
+# yl: d2, l0                       
+lsYL_t35_v0_p0_m0_d2_l0 = ["yl_t35_v0_p0_m0_d2_l0_0", 
+                       "yl_t35_v0_p0_m0_d2_l0_1",
+                       "yl_t35_v0_p0_m0_d2_l0_2"]
+   
+# yl: d2, l1
+lsYL_t35_v0_p0_m0_d2_l1 = ["yl_t35_v0_p0_m0_d2_l1_0", 
+                       "yl_t35_v0_p0_m0_d2_l1_1",
+                       "yl_t35_v0_p0_m0_d2_l1_2"]
+ 
+# yl: d3, l0
+lsYL_t35_v0_p0_m0_d3_l0 = ["yl_t35_v0_p0_m0_d3_l0_0", 
+                       "yl_t35_v0_p0_m0_d3_l0_1",
+                       "yl_t35_v0_p0_m0_d3_l0_2"]
+ 
+# yl: d3, l1                      
+lsYL_t35_v0_p0_m0_d3_l1 = ["yl_t35_v0_p0_m0_d3_l1_0", 
+                       "yl_t35_v0_p0_m0_d3_l1_1",
+                       "yl_t35_v0_p0_m0_d3_l1_2"]
+                       
+# --------
+                       
+# ww: base state
+lsWW_t11_v0_p0_m0_d1_l0 = ["ww_t11_v0_p0_m0_d1_l0_0", 
+                       "ww_t11_v0_p0_m0_d1_l0_1",
+                       "ww_t11_v0_p0_m0_d1_l0_2"]
+
+# ww: p30
+lsWW_t11_v0_p30_m0_d1_l0 = ["ww_t11_v0_p30_m0_d1_l0_0", 
+                        "ww_t11_v0_p30_m0_d1_l0_1",
+                        "ww_t11_v0_p30_m0_d1_l0_2"]
+
+# ww: p330
+lsWW_t11_v0_p330_m0_d1_l0 = ["ww_t11_v0_p330_m0_d1_l0_0", 
+                         "ww_t11_v0_p330_m0_d1_l0_1",
+                         "ww_t11_v0_p330_m0_d1_l0_2"]
+
+# ww: m1                        
+lsWW_t11_v0_p0_m1_d1_l0 = ["ww_t11_v0_p0_m1_d1_l0_0", 
+                       "ww_t11_v0_p0_m1_d1_l0_1",
+                       "ww_t11_v0_p0_m1_d1_l0_2"]
+
+# ww: v1                      
+lsWW_t11_v1_p0_m0_d1_l0 = ["ww_t11_v1_p0_m0_d1_l0_0", 
+                       "ww_t11_v1_p0_m0_d1_l0_1",
+                       "ww_t11_v1_p0_m0_d1_l0_2"]
+
+# ww: d2, l0                       
+lsWW_t11_v0_p0_m0_d2_l0 = ["ww_t11_v0_p0_m0_d2_l0_0", 
+                       "ww_t11_v0_p0_m0_d2_l0_1",
+                       "ww_t11_v0_p0_m0_d2_l0_2"]
+   
+# ww: d2, l1
+lsWW_t11_v0_p0_m0_d2_l1 = ["ww_t11_v0_p0_m0_d2_l1_0", 
+                       "ww_t11_v0_p0_m0_d2_l1_1",
+                       "ww_t11_v0_p0_m0_d2_l1_2"]
+ 
+# ww: d3, l0
+lsWW_t11_v0_p0_m0_d3_l0 = ["ww_t11_v0_p0_m0_d3_l0_0", 
+                       "ww_t11_v0_p0_m0_d3_l0_1",
+                       "ww_t11_v0_p0_m0_d3_l0_2"]
+ 
+# ww: d3, l1                      
+lsWW_t11_v0_p0_m0_d3_l1 = ["ww_t11_v0_p0_m0_d3_l1_0", 
+                       "ww_t11_v0_p0_m0_d3_l1_1",
+                       "ww_t11_v0_p0_m0_d3_l1_2"]
+                       
+# --------
+                       
+# qy: base state
+lsQY_t7_v0_p0_m0_d1_l0 = ["qy_t7_v0_p0_m0_d1_l0_0", 
+                       "qy_t7_v0_p0_m0_d1_l0_1",
+                       "qy_t7_v0_p0_m0_d1_l0_2"]
+
+# qy: p30
+lsQY_t7_v0_p30_m0_d1_l0 = ["qy_t7_v0_p30_m0_d1_l0_0", 
+                        "qy_t7_v0_p30_m0_d1_l0_1",
+                        "qy_t7_v0_p30_m0_d1_l0_2"]
+
+# qy: p330
+lsQY_t7_v0_p330_m0_d1_l0 = ["qy_t7_v0_p330_m0_d1_l0_0", 
+                         "qy_t7_v0_p330_m0_d1_l0_1",
+                         "qy_t7_v0_p330_m0_d1_l0_2"]
+
+# qy: m1                        
+lsQY_t7_v0_p0_m1_d1_l0 = ["qy_t7_v0_p0_m1_d1_l0_0", 
+                       "qy_t7_v0_p0_m1_d1_l0_1",
+                       "qy_t7_v0_p0_m1_d1_l0_2"]
+
+# qy: v1                      
+lsQY_t7_v1_p0_m0_d1_l0 = ["qy_t7_v1_p0_m0_d1_l0_0", 
+                       "qy_t7_v1_p0_m0_d1_l0_1",
+                       "qy_t7_v1_p0_m0_d1_l0_2"]
+
+# qy: d2, l0                       
+lsQY_t7_v0_p0_m0_d2_l0 = ["qy_t7_v0_p0_m0_d2_l0_0", 
+                       "qy_t7_v0_p0_m0_d2_l0_1",
+                       "qy_t7_v0_p0_m0_d2_l0_2"]
+   
+# qy: d2, l1
+lsQY_t7_v0_p0_m0_d2_l1 = ["qy_t7_v0_p0_m0_d2_l1_0", 
+                       "qy_t7_v0_p0_m0_d2_l1_1",
+                       "qy_t7_v0_p0_m0_d2_l1_2"]
+ 
+# qy: d3, l0
+lsQY_t7_v0_p0_m0_d3_l0 = ["qy_t7_v0_p0_m0_d3_l0_0", 
+                       "qy_t7_v0_p0_m0_d3_l0_1",
+                       "qy_t7_v0_p0_m0_d3_l0_2"]
+ 
+# qy: d3, l1                      
+lsQY_t7_v0_p0_m0_d3_l1 = ["qy_t7_v0_p0_m0_d3_l1_0", 
+                       "qy_t7_v0_p0_m0_d3_l1_1",
+                       "qy_t7_v0_p0_m0_d3_l1_2"]
+                       
+#==============================================================================
+# data\experiment\user_data_v4\
+#==============================================================================
+# static, horizontal, relaxed state
+lsYL_t36_v0_p0_m0_d1_l0 = ["yl_t36_v0_p0_m0_d1_l0_0",
+                           "yl_t36_v0_p0_m0_d1_l0_1",
+                           "yl_t36_v0_p0_m0_d1_l0_2", 
+                           "yl_t36_v0_p0_m0_d1_l0_3",
+                           "yl_t36_v0_p0_m0_d1_l0_4"]
+                           
+lsWW_t11_v0_p0_m0_d1_l0 = ["ww_t11_v0_p0_m0_d1_l0_0", 
+                           "ww_t11_v0_p0_m0_d1_l0_1",
+                           "ww_t11_v0_p0_m0_d1_l0_2"]
+                           
+lsQY_t7_v0_p0_m0_d1_l0 = ["qy_t7_v0_p0_m0_d1_l0_0", 
+                          "qy_t7_v0_p0_m0_d1_l0_1",
+                          "qy_t7_v0_p0_m0_d1_l0_2"]
+                          
+
+                          
+# posture
+lsYL_t36_v0_p30_m0_d1_l0 = ["yl_t36_v0_p30_m0_d1_l0_0",
+                            "yl_t36_v0_p30_m0_d1_l0_1",
+                            "yl_t36_v0_p30_m0_d1_l0_2", 
+                            "yl_t36_v0_p30_m0_d1_l0_3",
+                            "yl_t36_v0_p30_m0_d1_l0_4"]
+                            
+lsYL_t36_v0_p60_m0_d1_l0 = ["yl_t36_v0_p60_m0_d1_l0_0",
+                            "yl_t36_v0_p60_m0_d1_l0_1",
+                            "yl_t36_v0_p60_m0_d1_l0_2", 
+                            "yl_t36_v0_p60_m0_d1_l0_3",
+                            "yl_t36_v0_p60_m0_d1_l0_4"]
+                            
+lsYL_t36_v0_p270_m0_d1_l0 = ["yl_t36_v0_p270_m0_d1_l0_0",
+                             "yl_t36_v0_p270_m0_d1_l0_1",
+                             "yl_t36_v0_p270_m0_d1_l0_2", 
+                             "yl_t36_v0_p270_m0_d1_l0_3",
+                             "yl_t36_v0_p270_m0_d1_l0_4"]
+
+                            
+lsYL_t36_v0_p330_m0_d1_l0 = ["yl_t36_v0_p330_m0_d1_l0_0",
+                             "yl_t36_v0_p330_m0_d1_l0_1",
+                             "yl_t36_v0_p330_m0_d1_l0_2", 
+                             "yl_t36_v0_p330_m0_d1_l0_3",
+                             "yl_t36_v0_p330_m0_d1_l0_4"]                            
+                             
+# install location
+lsYL_t36_v0_p0_m0_d2_l0 = ["yl_t36_v0_p0_m0_d2_l0_0",
+                           "yl_t36_v0_p0_m0_d2_l0_1",
+                           "yl_t36_v0_p0_m0_d2_l0_2", 
+                           "yl_t36_v0_p0_m0_d2_l0_3",
+                           "yl_t36_v0_p0_m0_d2_l0_4"]
+                           
+lsYL_t36_v0_p0_m0_d3_l0 = ["yl_t36_v0_p0_m0_d3_l0_0",
+                           "yl_t36_v0_p0_m0_d3_l0_1",
+                           "yl_t36_v0_p0_m0_d3_l0_2", 
+                           "yl_t36_v0_p0_m0_d3_l0_3",
+                           "yl_t36_v0_p0_m0_d3_l0_4"]
+                           
+#==============================================================================
+# data\experiment\user_data_v5\xxx\
+#==============================================================================
+# -- HCY ---
+# base state
+lsHCY_t10_v0_p0_m0_d1_l0 = ["hcy_t10_v0_p0_m0_d1_l0_0",
+                            "hcy_t10_v0_p0_m0_d1_l0_1",
+                            "hcy_t10_v0_p0_m0_d1_l0_2",
+                            "hcy_t10_v0_p0_m0_d1_l0_3",
+                            "hcy_t10_v0_p0_m0_d1_l0_4"]
+                            
+# p30
+lsHCY_t10_v0_p30_m0_d1_l0 = ["hcy_t10_v0_p30_m0_d1_l0_0",
+                             "hcy_t10_v0_p30_m0_d1_l0_1",
+                             "hcy_t10_v0_p30_m0_d1_l0_2"]
+                             
+# p60
+lsHCY_t10_v0_p60_m0_d1_l0 = ["hcy_t10_v0_p60_m0_d1_l0_0",
+                             "hcy_t10_v0_p60_m0_d1_l0_1",
+                             "hcy_t10_v0_p60_m0_d1_l0_2"]
+                             
+# p330
+lsHCY_t10_v0_p330_m0_d1_l0 = ["hcy_t10_v0_p330_m0_d1_l0_0",
+                              "hcy_t10_v0_p330_m0_d1_l0_1",
+                              "hcy_t10_v0_p330_m0_d1_l0_2"]
+                             
+# tense muscle
+lsHCY_t10_v0_p0_m1_d1_l0 = ["hcy_t10_v0_p0_m1_d1_l0_0",
+                            "hcy_t10_v0_p0_m1_d1_l0_1",
+                            "hcy_t10_v0_p0_m1_d1_l0_2"]
+                            
+# mobile
+lsHCY_t10_v1_p0_m0_d1_l0 = ["hcy_t10_v1_p0_m0_d1_l0_0",
+                            "hcy_t10_v1_p0_m0_d1_l0_1",
+                            "hcy_t10_v1_p0_m0_d1_l0_2"]
+                            
+# wearing postion: d2
+lsHCY_t10_v0_p0_m0_d2_l0 = ["hcy_t10_v0_p0_m0_d2_l0_0",
+                            "hcy_t10_v0_p0_m0_d2_l0_1",
+                            "hcy_t10_v0_p0_m0_d2_l0_2"]
+                            
+# wearing position: d3
+lsHCY_t10_v0_p0_m0_d3_l0 = ["hcy_t10_v0_p0_m0_d3_l0_0",
+                            "hcy_t10_v0_p0_m0_d3_l0_1",
+                            "hcy_t10_v0_p0_m0_d3_l0_2"]
+
+# wearing position: d4
+lsHCY_t10_v0_p0_m0_d4_l0 = ["hcy_t10_v0_p0_m0_d4_l0_0",
+                            "hcy_t10_v0_p0_m0_d4_l0_1",
+                            "hcy_t10_v0_p0_m0_d4_l0_2"]
+                            
+# -- CHX --
+# base state
+lsCHX_t5_v0_p0_m0_d1_l0 = ["chx_t5_v0_p0_m0_d1_l0_0",
+                            "chx_t5_v0_p0_m0_d1_l0_1",
+                            "chx_t5_v0_p0_m0_d1_l0_2",
+                            "chx_t5_v0_p0_m0_d1_l0_3",
+                            "chx_t5_v0_p0_m0_d1_l0_4"]
+                            
+# p30
+lsCHX_t5_v0_p30_m0_d1_l0 = ["chx_t5_v0_p30_m0_d1_l0_0",
+                            "chx_t5_v0_p30_m0_d1_l0_1",
+                            "chx_t5_v0_p30_m0_d1_l0_2"]
+                             
+# p60
+lsCHX_t5_v0_p60_m0_d1_l0 = ["chx_t5_v0_p60_m0_d1_l0_0",
+                            "chx_t5_v0_p60_m0_d1_l0_1",
+                            "chx_t5_v0_p60_m0_d1_l0_2"]
+                             
+# p330
+lsCHX_t5_v0_p330_m0_d1_l0 = ["chx_t5_v0_p330_m0_d1_l0_0",
+                              "chx_t5_v0_p330_m0_d1_l0_1",
+                              "chx_t5_v0_p330_m0_d1_l0_2"]
+                             
+# tense muscle
+lsCHX_t5_v0_p0_m1_d1_l0 = ["chx_t5_v0_p0_m1_d1_l0_0",
+                           "chx_t5_v0_p0_m1_d1_l0_1",
+                           "chx_t5_v0_p0_m1_d1_l0_2"]
+                            
+# mobile
+lsCHX_t5_v1_p0_m0_d1_l0 = ["chx_t5_v1_p0_m0_d1_l0_0",
+                           "chx_t5_v1_p0_m0_d1_l0_1",
+                           "chx_t5_v1_p0_m0_d1_l0_2"]
+                            
+# wearing postion: d2
+lsCHX_t5_v0_p0_m0_d2_l0 = ["chx_t5_v0_p0_m0_d2_l0_0",
+                            "chx_t5_v0_p0_m0_d2_l0_1",
+                            "chx_t5_v0_p0_m0_d2_l0_2"]
+                            
+# wearing position: d3
+lsCHX_t5_v0_p0_m0_d3_l0 = ["chx_t5_v0_p0_m0_d3_l0_0",
+                           "chx_t5_v0_p0_m0_d3_l0_1",
+                           "chx_t5_v0_p0_m0_d3_l0_2"]
+
+# wearing position: d4
+lsCHX_t5_v0_p0_m0_d4_l0 = ["chx_t5_v0_p0_m0_d4_l0_0",
+                           "chx_t5_v0_p0_m0_d4_l0_1",
+                           "chx_t5_v0_p0_m0_d4_l0_2"]
+                           
+                           
+# -- CYJ --
+# base state
+lsCYJ_t20_v0_p0_m0_d1_l0 = ["cyj_t20_v0_p0_m0_d1_l0_0",
+                            "cyj_t20_v0_p0_m0_d1_l0_1",
+                            "cyj_t20_v0_p0_m0_d1_l0_2",
+                            "cyj_t20_v0_p0_m0_d1_l0_3",
+                            "cyj_t20_v0_p0_m0_d1_l0_4"]
+                            
+# p30
+lsCYJ_t20_v0_p30_m0_d1_l0 = ["cyj_t20_v0_p30_m0_d1_l0_0",
+                             "cyj_t20_v0_p30_m0_d1_l0_1",
+                             "cyj_t20_v0_p30_m0_d1_l0_2",]
+                             
+# p330
+lsCYJ_t20_v0_p330_m0_d1_l0 = ["cyj_t20_v0_p330_m0_d1_l0_0",
+                              "cyj_t20_v0_p330_m0_d1_l0_1",
+                              "cyj_t20_v0_p330_m0_d1_l0_2"]
+                              
+# tense muscle
+lsCYJ_t20_v0_p0_m1_d1_l0 = ["cyj_t20_v0_p0_m1_d1_l0_0",
+                            "cyj_t20_v0_p0_m1_d1_l0_1",
+                            "cyj_t20_v0_p0_m1_d1_l0_2"]
+                            
+# mobility
+lsCYJ_t20_v1_p0_m0_d1_l0 = ["cyj_t20_v1_p0_m0_d1_l0_0",
+                            "cyj_t20_v1_p0_m0_d1_l0_1",
+                            "cyj_t20_v1_p0_m0_d1_l0_2"]
+                            
+# wearing location: d2
+lsCYJ_t20_v0_p0_m0_d2_l0 = ["cyj_t20_v0_p0_m0_d2_l0_0",
+                            "cyj_t20_v0_p0_m0_d2_l0_1",
+                            "cyj_t20_v0_p0_m0_d2_l0_2"]
+                            
+# wearing location: d3
+lsCYJ_t20_v0_p0_m0_d3_l0 = ["cyj_t20_v0_p0_m0_d3_l0_0",
+                            "cyj_t20_v0_p0_m0_d3_l0_1",
+                            "cyj_t20_v0_p0_m0_d3_l0_2"]
+                            
+# wearing location: d4
+lsCYJ_t20_v0_p0_m0_d4_l0 = ["cyj_t20_v0_p0_m0_d4_l0_0",
+                            "cyj_t20_v0_p0_m0_d4_l0_1",
+                            "cyj_t20_v0_p0_m0_d4_l0_2"]
+                            
+# -- XH --
+# base state
+lsXH_t1_v0_p0_m0_d1_l0 = ["xh_t1_v0_p0_m0_d1_l0_0",
+                          "xh_t1_v0_p0_m0_d1_l0_1",
+                          "xh_t1_v0_p0_m0_d1_l0_2",
+                          "xh_t1_v0_p0_m0_d1_l0_3",
+                          "xh_t1_v0_p0_m0_d1_l0_4"]
+
+# p30
+lsXH_t1_v0_p30_m0_d1_l0 = ["xh_t1_v0_p30_m0_d1_l0_0",
+                           "xh_t1_v0_p30_m0_d1_l0_1",
+                           "xh_t1_v0_p30_m0_d1_l0_2",]
+                             
+# p330
+lsXH_t1_v0_p330_m0_d1_l0 = ["xh_t1_v0_p330_m0_d1_l0_0",
+                            "xh_t1_v0_p330_m0_d1_l0_1",
+                            "xh_t1_v0_p330_m0_d1_l0_2"]
+                              
+# tense muscle
+lsXH_t1_v0_p0_m1_d1_l0 = ["xh_t1_v0_p0_m1_d1_l0_0",
+                          "xh_t1_v0_p0_m1_d1_l0_1",
+                          "xh_t1_v0_p0_m1_d1_l0_2"]
+                            
+# mobility
+lsXH_t1_v1_p0_m0_d1_l0 = ["xh_t1_v1_p0_m0_d1_l0_0",
+                          "xh_t1_v1_p0_m0_d1_l0_1",
+                          "xh_t1_v1_p0_m0_d1_l0_2"]
+                            
+# wearing location: d2
+lsXH_t1_v0_p0_m0_d2_l0 = ["xh_t1_v0_p0_m0_d2_l0_0",
+                          "xh_t1_v0_p0_m0_d2_l0_1",
+                          "xh_t1_v0_p0_m0_d2_l0_2"]
+                            
+# wearing location: d3
+lsXH_t1_v0_p0_m0_d3_l0 = ["xh_t1_v0_p0_m0_d3_l0_0",
+                          "xh_t1_v0_p0_m0_d3_l0_1",
+                          "xh_t1_v0_p0_m0_d3_l0_2"]
+                            
+# wearing location: d4
+lsXH_t1_v0_p0_m0_d4_l0 = ["xh_t1_v0_p0_m0_d4_l0_0",
+                          "xh_t1_v0_p0_m0_d4_l0_1",
+                          "xh_t1_v0_p0_m0_d4_l0_2"]
+                          
+# -- LQ --
+# base state
+lsLQ_t1_v0_p0_m0_d1_l0 = ["lq_t1_v0_p0_m0_d1_l0_0",
+                          "lq_t1_v0_p0_m0_d1_l0_1",
+                          "lq_t1_v0_p0_m0_d1_l0_2",
+                          "lq_t1_v0_p0_m0_d1_l0_3",
+                          "lq_t1_v0_p0_m0_d1_l0_4"]
+
+# p30
+lsLQ_t1_v0_p30_m0_d1_l0 = ["lq_t1_v0_p30_m0_d1_l0_0",
+                           "lq_t1_v0_p30_m0_d1_l0_1",
+                           "lq_t1_v0_p30_m0_d1_l0_2",]
+                             
+# p330
+lsLQ_t1_v0_p330_m0_d1_l0 = ["lq_t1_v0_p330_m0_d1_l0_0",
+                            "lq_t1_v0_p330_m0_d1_l0_1",
+                            "lq_t1_v0_p330_m0_d1_l0_2"]
+                              
+# tense muscle
+lsLQ_t1_v0_p0_m1_d1_l0 = ["lq_t1_v0_p0_m1_d1_l0_0",
+                          "lq_t1_v0_p0_m1_d1_l0_1",
+                          "lq_t1_v0_p0_m1_d1_l0_2"]
+                            
+# mobility
+lsLQ_t1_v1_p0_m0_d1_l0 = ["lq_t1_v1_p0_m0_d1_l0_0",
+                          "lq_t1_v1_p0_m0_d1_l0_1",
+                          "lq_t1_v1_p0_m0_d1_l0_2"]
+                            
+# wearing location: d2
+lsLQ_t1_v0_p0_m0_d2_l0 = ["lq_t1_v0_p0_m0_d2_l0_0",
+                          "lq_t1_v0_p0_m0_d2_l0_1",
+                          "lq_t1_v0_p0_m0_d2_l0_2"]
+                            
+# wearing location: d3
+lsLQ_t1_v0_p0_m0_d3_l0 = ["lq_t1_v0_p0_m0_d3_l0_0",
+                          "lq_t1_v0_p0_m0_d3_l0_1",
+                          "lq_t1_v0_p0_m0_d3_l0_2"]
+                            
+# wearing location: d4
+lsLQ_t1_v0_p0_m0_d4_l0 = ["lq_t1_v0_p0_m0_d4_l0_0",
+                          "lq_t1_v0_p0_m0_d4_l0_1",
+                          "lq_t1_v0_p0_m0_d4_l0_2"]

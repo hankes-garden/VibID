@@ -26,6 +26,8 @@ def undersampling():
     plt.plot(arrFreqIndex, arrNormalizedPower[0:len(arrNormalizedPower)/2] )
     plt.show()
     
+
+    
    
 def simulateResponse():
     """
@@ -34,7 +36,7 @@ def simulateResponse():
         equation of SDOF object.
     """
     
-    dSamplingFreq = 320.0
+    dSamplingFreq = 500.0
     arrTime = np.linspace(0.0, 12, 12*dSamplingFreq) # time
 
     # input voltage increases with time
@@ -59,7 +61,8 @@ def simulateResponse():
     # plot input force
     plt.figure()
     plt.plot(arrTime, arrVibForce)
-    plt.suptitle("input force")
+    plt.figure()
+    plt.plot(arrTime, arrVibForce*np.sin(2*np.pi*arrVibFrequency*arrTime))
     plt.show()
         
     # response vs. mass
@@ -96,5 +99,7 @@ def simulateResponse():
     plt.show()
     
 
+    
+
 if __name__ == "__main__":
-    simulateResponse()
+    simulateResonance()

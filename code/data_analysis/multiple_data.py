@@ -237,12 +237,15 @@ def fftOnModulus(lsData, lsXYZColumns, dSamplingFreq, nDCEnd=5):
             
     
     
-def loadDataEx(strWorkingDir, lsFileNames, lsColumnNames, strFileExt = '.txt'):
+def loadDataEx(strWorkingDir, lsFileNames, 
+               lsColumnNames, strFileExt = '.txt'):
     """"load a list of data"""
     # load data
     lsData = []
     for strName in lsFileNames:
-        dfAcc = pd.read_csv(strWorkingDir+strName+strFileExt, dtype=np.float32)
+        print strName
+        dfAcc = pd.read_csv(strWorkingDir+strName+strFileExt,
+                            dtype=np.float32)
         dfAcc.columns = lsColumnNames[:len(dfAcc.columns)]
         lsData.append(dfAcc)
         
@@ -250,7 +253,8 @@ def loadDataEx(strWorkingDir, lsFileNames, lsColumnNames, strFileExt = '.txt'):
     for i in xrange(len(lsData) ):
         lsMask = [True ]* len(lsData[i])
         for col in lsData[i].columns:
-            lsMask = lsMask & (lsData[i][col] != -1) & (~lsData[i][col].isnull() )
+            lsMask = lsMask & (lsData[i][col] != -1) \
+            & (~lsData[i][col].isnull() )
         lsData[i] = lsData[i][lsMask]
         
     return lsData
@@ -383,7 +387,10 @@ if __name__ == '__main__':
     sys.exit(0)
     
     #%% time domain
-    lsFileNames = ds.lsYL_t22_l1 + ds.lsYL_t23_l1
+    dSamplingFreq = 320.0
+    strWorkingDir = "../../data/experiment/user_identification_v3/"
+    lsFileNames = ['yl_t35_v0_p0_m0_d1_l0_0', 'yl_t35_v0_p30_m0_d1_l0_0',
+                   'yl_t35_v0_p330_m0_d1_l0_0']
     lsData = loadDataEx(strWorkingDir, lsFileNames, lsColumnNames)
     
     plotEx(lsData, lsFileNames, ['x0', 'y0', 'z0'], nMaxColumnPerSubplot=4)
