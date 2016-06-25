@@ -1,4 +1,5 @@
 # no pyc files
 *.pyc
+desktop.ini
 # no data file
 /data
